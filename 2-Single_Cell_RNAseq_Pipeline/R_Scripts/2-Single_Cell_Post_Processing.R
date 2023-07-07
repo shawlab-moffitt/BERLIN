@@ -209,7 +209,7 @@ for (i in names(subset_seurat_obj@assays)) {
   scaled_counts <- tibble::rownames_to_column(scaled_counts, var = "Genes")
   raw_counts <- tibble::rownames_to_column(raw_counts, var = "Genes")
   normalized_data <- tibble::rownames_to_column(normalized_data, var = "Genes")
-  metadata <- tibble::rownames_to_column(metadata, var = "Barcodes")
+  metadata <- tibble::rownames_to_column(metadata, var = "Cell")
   
   # Write scaled_counts,raw_counts, normalized_data, and metadata to separate files
   write.table(scaled_counts, file = paste0(output_folder, "/", Project_Name,"_",num_cells,"_",i,"_ScaledCounts.txt"),

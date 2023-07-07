@@ -151,7 +151,10 @@ meta_out$Cell <- rownames(meta_out)
 meta_out <- meta_out %>% relocate(Cell)
 if (!is.null(meta)) {
   meta_out <- merge(meta,meta_out, by = "Cell", all.y = T)
-  seurat_obj@meta.data <- meta_out
+  meta_obj <- meta_out
+  rownames(meta_obj) <- meta_obj$Cell
+  meta_obj <- meta_obj[,-1]
+  seurat_obj@meta.data <- meta_obj
 }
 
 # Write metadata to a file

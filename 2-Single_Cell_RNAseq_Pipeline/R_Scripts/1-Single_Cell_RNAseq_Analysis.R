@@ -11,10 +11,13 @@ setwd("BERLIN")
 Project_Name <- "GSE116256_AMLscRNA"
 
 # Define the path to the count file
-Count_file <- "2-Single_Cell_RNAseq_Pipeline/Input/Count_File_Example_GSE116256.zip"
+Count_file <- "2-Single_Cell_RNAseq_Pipeline/Input/Count_File_Example_GSE116256.txt"
+
+# Define path to clinical/meta data (OPTIONAL)
+meta_file <- "2-Single_Cell_RNAseq_Pipeline/Input/Meta_File_Example_GSE116256.txt"
 
 # Specify the output folder path
-output_folder <- "2-Single_Cell_RNAseq_Pipeline/Output/"
+output_folder <- "2-Single_Cell_RNAseq_Pipeline/Output/Single_Cell_RNAseq_Output/"
 
 
 
@@ -34,8 +37,20 @@ invisible(lapply(packages, library, character.only = TRUE))
 
 ####---- Run Script ----####
 
+# Create an output directory if it doesn't already exist
+if (!file.exists(output_folder)) {
+  dir.create(output_folder)
+}
+
+if (file.exists(meta_file)) {
+  meta <- read.csv2(meta_file, sep = "", header = TRUE)
+  meta[,1] <- gsub("[[:punct:]]",".",meta[,1])
+  colnames(meta)[1] <- "Cell"
+} else {meta <- NULL}
+
 # Read the count file
 counts <- read.csv2(Count_file, sep = "", header = TRUE, row.names = 1)
+colnames(counts) <- gsub("[[:punct:]]",".",colnames(counts))
 
 # Define a function for quality control (QC) using Seurat
 qc.seurat <- function(seurat, species, nFeature) {
@@ -74,7 +89,6 @@ seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatur
 
 # Scale data by regressing out unwanted sources of variation
 seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("nFeature_RNA", "percent.mt"), verbose = FALSE)
-scaled_count <- seurat_obj@assays$RNA@scale.data
 
 # Perform dimensionality reduction and clustering
 seurat_obj <- RunPCA(seurat_obj, npcs = 30, verbose = FALSE, seed.use = 42)
@@ -97,7 +111,6 @@ northern.ref <- celldex::NovershternHematopoieticData()
 
 # Convert Seurat object to SingleCellExperiment
 sce <- as.SingleCellExperiment(DietSeurat(seurat_obj))
-sce
 
 # Auto-annotate cell types using reference databases from celldex
 hpca.main <- SingleR(test = sce, assay.type.test = 1, ref = hpca.ref, labels = hpca.ref$label.main)
@@ -123,15 +136,6 @@ seurat_obj@meta.data$northern.fine <- northern.fine$pruned.labels
 seurat_obj@meta.data$blue.main <- blue.main$pruned.labels
 seurat_obj@meta.data$blue.fine <- blue.fine$pruned.labels
 
-# Manual annotations
-seurat_obj@meta.data$seurat_clusters_gabby_annotation <- "NA"
-seurat_obj@meta.data[which(seurat_obj@meta.data$seurat_clusters %in% c(1, 4:6, 8:11, 13, 15, 16)),
-                     "seurat_clusters_gabby_annotation"] <- "Tumor"
-seurat_obj@meta.data[which(seurat_obj@meta.data$seurat_clusters %in% c(0, 2, 3, 7, 14)),
-                     "seurat_clusters_gabby_annotation"] <- "Myeloid"
-seurat_obj@meta.data[which(seurat_obj@meta.data$seurat_clusters %in% c(12)),
-                     "seurat_clusters_gabby_annotation"] <- "Stroma"
-
 # Add UMAP coordinates to the metadata
 UMAP <- as.data.frame(Embeddings(object = seurat_obj[["umap"]]))
 seurat_obj@meta.data$UMAP_1 <- UMAP$UMAP_1
@@ -142,40 +146,45 @@ tsne <- as.data.frame(Embeddings(object = seurat_obj[["tsne"]]))
 seurat_obj@meta.data$tSNE_1 <- tsne$tSNE_1
 seurat_obj@meta.data$tSNE_2 <- tsne$tSNE_1
 
-
+meta_out <- seurat_obj@meta.data
+meta_out$Cell <- rownames(meta_out)
+meta_out <- meta_out %>% relocate(Cell)
+if (!is.null(meta)) {
+  meta_out <- merge(meta,meta_out, by = "Cell", all.y = T)
+  seurat_obj@meta.data <- meta_out
+}
 
 # Write metadata to a file
-write.table(seurat_obj@meta.data, file = file.path(output_folder, paste0(Project_Name,"_metafile_with_annotation.txt")),
-            sep = "\t")
-
-# Write scaled count matrix to a file
-write.table(scaled_count, file = file.path(output_folder, paste0(Project_Name,"_scaled_count_matrix.txt")),
-            sep = "\t")
+write_delim(meta_out, file = file.path(output_folder, paste0(Project_Name,"_metafile_with_annotation.txt")),
+            delim = "\t")
 
 # Write seurat H5 file 
 SaveH5Seurat(seurat_obj, filename = file.path(output_folder, paste0(Project_Name,"_h5friendly")),
              overwrite = TRUE, verbose = TRUE)
 
+# write out count data
+for (i in names(seurat_obj@assays)) {
+  
+  # Retrieve scaled_counts, raw counts, normalized data, scaled counts, and metadata
+  scaled_counts <- as.data.frame(seurat_obj@assays[[i]]@scale.data)
+  raw_counts <- as.data.frame(seurat_obj@assays[[i]]@counts)
+  normalized_data <- as.data.frame(seurat_obj@assays[[i]]@data)
+  
+  # Add row names as a column for Alyssa Umap app
+  scaled_counts <- tibble::rownames_to_column(scaled_counts, var = "Genes")
+  raw_counts <- tibble::rownames_to_column(raw_counts, var = "Genes")
+  normalized_data <- tibble::rownames_to_column(normalized_data, var = "Genes")
+  
+  # Write scaled_counts,raw_counts, normalized_data, and metadata to separate files
+  write.table(scaled_counts, file = paste0(output_folder, "/", Project_Name,"_",i,"_ScaledCounts.txt"),
+              sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
+  write.table(raw_counts, file = paste0(output_folder, "/", Project_Name,"_",i,"_raw_counts.txt"),
+              sep = "\t", row.names = FALSE, col.names = TRUE)
+  write.table(normalized_data, file = paste0(output_folder, "/", Project_Name,"_",i,"_normalized_counts.txt"),
+              sep = "\t", row.names = FALSE, col.names = TRUE)
+}
 
-# Subset and write metadata for myeloid cells
-Idents(seurat_obj) <- "seurat_clusters_gabby_annotation"
 
-myeloid_subset <- subset(x = seurat_obj, idents = "Myeloid")
-write.table(myeloid_subset@meta.data, file = file.path(output_folder, paste0(Project_Name,"_myeloid_metafiles.txt")),
-            sep = "\t")
-
-# Save myeloid subset as H5Seurat object
-SaveH5Seurat(myeloid_subset, filename = file.path(output_folder, paste0(Project_Name,"_myeloid_h5friendly")),
-             overwrite = TRUE, verbose = TRUE)
-
-# Subset and write metadata for tumor cells
-tumor_subset <- subset(x = seurat_obj, idents = "Tumor")
-write.table(tumor_subset@meta.data, file = file.path(output_folder, paste0(Project_Name,"_tumor_metafiles.txt")),
-            sep = "\t")
-
-# Save tumor subset as H5Seurat object
-SaveH5Seurat(tumor_subset, filename = file.path(output_folder, paste0(Project_Name,"_tumor_h5friendly")),
-             overwrite = TRUE, verbose = TRUE)
 
 
 

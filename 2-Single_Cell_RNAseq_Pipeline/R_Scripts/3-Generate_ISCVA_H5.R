@@ -5,17 +5,18 @@
 
 ## Set local Github repository as working directory
 setwd("BERLIN")
+
 ## Load Functions from Customized ISCVAM H5 File
-source("2-Single_Cell_RNAseq_Pipeline/R_Scripts/R/Generate_ISCVAM_H5.R")
+source("2-Single_Cell_RNAseq_Pipeline/R_Scripts/R/write.h5.R")
 
 ## Desired project name
 Project_Name <- "GSE116256_AMLscRNA"
 
 ## Seurat H5 file
-h5_file <- "2-Single_Cell_RNAseq_Pipeline/Input/GSE116256_AMLscRNA_h5friendly.h5seurat"
+h5_file <- "2-Single_Cell_RNAseq_Pipeline/Output/Single_Cell_RNAseq_Output/GSE116256_AMLscRNA_h5friendly.h5seurat"
 
 ## Specify the output folder path
-output_folder <- "2-Single_Cell_RNAseq_Pipeline/Output/"
+output_folder <- "2-Single_Cell_RNAseq_Pipeline/Output/Generate_ISCVA_H5_Output"
 
 
 

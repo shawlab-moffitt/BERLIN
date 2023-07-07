@@ -10,16 +10,16 @@
 
 ####----User File Input----####
 
-Project_Name <- ''
+Project_Name <- 'GSE116256 AMLscRNA'
 
-Expression_File <- ''
+Expression_File <- 'Example_Input_Data/GSE116256_AMLscRNA_1000_RNA_normalized_counts.txt'
 
-Meta_File <- ''
+Meta_File <- 'Example_Input_Data/GSE116256_AMLscRNA_1000_RNA_metafile.txt'
 
 PreSelect_UMAP1 <- 'UMAP_1'
 PreSelect_UMAP2 <- 'UMAP_2'
-PreSelect_Annotation1 <- ''
-PreSelect_Annotation2 <- ''
+PreSelect_Annotation1 <- 'seurat_clusters'
+PreSelect_Annotation2 <- 'dice.main'
 
 
 
@@ -516,7 +516,7 @@ server <- function(input, output, session) {
   
   output$rendBPgroupCriteria <- renderUI({
     
-    selectInput("BPgroupCriteria","Bar Plot Grouping Criteria:", choices = anno_options)
+    selectInput("BPgroupCriteria","Bar Plot Grouping Criteria:", choices = anno_options, selected = "seurat_clusters")
     
   })
   
@@ -1732,10 +1732,10 @@ server <- function(input, output, session) {
         colorin <- input$barplotColoCodes                # Bar plot Color codes
         Vplotylim <- input$barPlotYlim                      # Y-limit
         Vplotybreaks <- input$barplotYbreaks                # Y-axis breaks
-        dotsizein <- input$barplotDotSize
+        dotsizein <- input$VplotDotSize
         StatMethod <- input$BPstatComp
         bar_type <- input$ErrorBP
-        dotChoice <- input$barplotsampledots
+        dotChoice <- input$Vplotsampledots
         VilOrBP <- input$ViolinOrBoxP
         
         FeatMat <- expr

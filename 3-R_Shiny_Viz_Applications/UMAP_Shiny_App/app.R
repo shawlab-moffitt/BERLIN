@@ -27,7 +27,7 @@ PreSelect_Annotation2 <- 'dice.main'
 
 ####----Install and load packages----####
 
-packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","ggstatsplot",
+packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs",
               "ggdendro","factoextra","dplyr","DT","viridis","readr","tidyverse","ggrepel","ggVennDiagram",
               "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales")
 

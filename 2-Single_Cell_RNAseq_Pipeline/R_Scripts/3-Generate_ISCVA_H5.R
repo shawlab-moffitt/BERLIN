@@ -4,7 +4,7 @@
 ####---- User Input ----####
 
 ## Set local Github repository as working directory
-setwd("BERLIN")
+setwd("~/R/BERLIN")
 
 ## Load Functions from Customized ISCVAM H5 File
 source("2-Single_Cell_RNAseq_Pipeline/R_Scripts/R/write.h5.R")
@@ -33,13 +33,13 @@ invisible(lapply(packages, library, character.only = TRUE))
 
 # Load H5 Seurat Compliant File
 seurat_obj <- LoadH5Seurat(h5_file,
-                             assays = c("integrated", "RNA"),
-                             reductions = c("pca", "tsne", "umap", "rpca"),
-                             graphs = NULL,
-                             images = NULL,
-                             meta.data = TRUE,
-                             commands = FALSE,
-                             verbose = FALSE)
+                           assays = c("integrated", "RNA"),
+                           reductions = c("pca", "tsne", "umap", "rpca"),
+                           graphs = NULL,
+                           images = NULL,
+                           meta.data = TRUE,
+                           commands = FALSE,
+                           verbose = FALSE)
 
 # Create Seurat.list
 seurat.list <- list(all = list(seurat = seurat_obj, covs = seurat_obj@meta.data))

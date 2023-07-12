@@ -5,22 +5,23 @@
 ####---- User Input ----####
 
 ## Set local Github repository as working directory
-setwd("BERLIN")
+setwd("~/R/BERLIN")
 
 ## Desired project name
 Project_Name <- "GSE116256_AMLscRNA"
 
 # Define the path to the count file
-Count_file <- "2-Single_Cell_RNAseq_Pipeline/Input/Count_File_Example_GSE116256.txt"
+Count_file <- "2-Single_Cell_RNAseq_Pipeline/Input/Count_File_Example_GSE116256_AML921A-D0.txt.gz"
 
 # Define path to clinical/meta data (OPTIONAL)
-meta_file <- "2-Single_Cell_RNAseq_Pipeline/Input/Meta_File_Example_GSE116256.txt"
+meta_file <- "2-Single_Cell_RNAseq_Pipeline/Input/Meta_File_Example_GSE116256_AML921A-D0.txt.gz"
 
 # Specify the output folder path
 output_folder <- "2-Single_Cell_RNAseq_Pipeline/Output/Single_Cell_RNAseq_Output/"
 
+seed <- 42
 
-
+resolution <- c(0.5,1,1.5,2)
 
 
 
@@ -37,13 +38,15 @@ invisible(lapply(packages, library, character.only = TRUE))
 
 ####---- Run Script ----####
 
+set.seed(seed)
+
 # Create an output directory if it doesn't already exist
 if (!file.exists(output_folder)) {
   dir.create(output_folder)
 }
 
 if (file.exists(meta_file)) {
-  meta <- read.csv2(meta_file, sep = "", header = TRUE)
+  meta <- as.data.frame(read_delim(meta_file, delim = '\t', col_names = T))
   meta[,1] <- gsub("[[:punct:]]",".",meta[,1])
   colnames(meta)[1] <- "Cell"
 } else {meta <- NULL}
@@ -91,11 +94,11 @@ seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatur
 seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("nFeature_RNA", "percent.mt"), verbose = FALSE)
 
 # Perform dimensionality reduction and clustering
-seurat_obj <- RunPCA(seurat_obj, npcs = 30, verbose = FALSE, seed.use = 42)
-seurat_obj <- RunTSNE(seurat_obj, reduction = "pca", dims = 1:30, seed.use = 1)
-seurat_obj <- RunUMAP(seurat_obj, dims = 1:10, verbose = FALSE, seed.use = 42)
+seurat_obj <- RunPCA(seurat_obj, npcs = 30, verbose = FALSE, seed.use = seed)
+seurat_obj <- RunTSNE(seurat_obj, reduction = "pca", dims = 1:30, seed.use = seed)
+seurat_obj <- RunUMAP(seurat_obj, dims = 1:10, verbose = FALSE, seed.use = seed)
 seurat_obj <- FindNeighbors(seurat_obj, reduction = "pca", dims = 1:30)
-seurat_obj <- FindClusters(seurat_obj, resolution = c(0.10, 0.15, 0.25,0.75))
+seurat_obj <- FindClusters(seurat_obj, resolution = resolution)
 
 # Find doublets using DoubletFinder
 suppressMessages(require(DoubletFinder))
@@ -144,7 +147,8 @@ seurat_obj@meta.data$UMAP_2 <- UMAP$UMAP_2
 # Add tSNE coordinates to the metadata
 tsne <- as.data.frame(Embeddings(object = seurat_obj[["tsne"]]))
 seurat_obj@meta.data$tSNE_1 <- tsne$tSNE_1
-seurat_obj@meta.data$tSNE_2 <- tsne$tSNE_1
+seurat_obj@meta.data$tSNE_2 <- tsne$tSNE_2
+
 
 meta_out <- seurat_obj@meta.data
 meta_out$Cell <- rownames(meta_out)

@@ -1,2 +1,0 @@
-gene	p_val	avg_log2FC	pct.1	pct.2	p_val_adj	cluster	diff_pct
-VAMP8	7.35686275726757e-06	-0.340144968884516	0.362	0.552	0.205249114065008	3	-0.19

@@ -1,1 +1,0 @@
-Genes	avg_log2FC	pct.1	pct.2

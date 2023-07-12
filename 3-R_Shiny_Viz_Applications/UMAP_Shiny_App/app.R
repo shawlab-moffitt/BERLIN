@@ -19,7 +19,7 @@ Meta_File <- 'Example_Input_Data/GSE116256_AMLscRNA_1000_RNA_metafile.txt'
 PreSelect_UMAP1 <- 'UMAP_1'
 PreSelect_UMAP2 <- 'UMAP_2'
 PreSelect_Annotation1 <- 'seurat_clusters'
-PreSelect_Annotation2 <- 'dice.main'
+PreSelect_Annotation2 <- 'CellType'
 
 
 
@@ -27,9 +27,9 @@ PreSelect_Annotation2 <- 'dice.main'
 
 ####----Install and load packages----####
 
-packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs",
+packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","slingshot",
               "ggdendro","factoextra","dplyr","DT","viridis","readr","tidyverse","ggrepel","ggVennDiagram",
-              "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales")
+              "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales","SingleCellExperiment")
 
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
@@ -43,7 +43,6 @@ if (any(installed_packages_BIOC == FALSE)) {
   BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
 }
 invisible(lapply(bioCpacks, library, character.only = TRUE))
-
 
 
 ####----Read In Files----####
@@ -92,6 +91,11 @@ if (TRUE %in% duplicated(expr[,1])) {
 expr <- as.data.frame(expr)
 rownames(expr) <- expr[,1]
 expr <- expr[,-1]
+
+expr_mat <- as.matrix(expr)
+sce <- SingleCellExperiment(assays = List(counts = expr_mat))
+assays(sce)$norm <- assays(sce)$counts
+
 # Get variables for selection feature
 GeneSymbols <- rownames(expr)
 
@@ -121,11 +125,6 @@ if (is.null(PreSelect_Annotation2) || PreSelect_Annotation2 == "") {
 
 ####----Functions----####
 
-load_data <- function() {
-  Sys.sleep(2)
-  hide("loading_page")
-  show("main_content")
-}
 
 g_legend<-function(a.gplot){
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
@@ -133,6 +132,47 @@ g_legend<-function(a.gplot){
   legend <- tmp$grobs[[leg]]
   legend
 }
+
+#setMethod(
+#  f = "slingMST",
+#  signature = "PseudotimeOrdering",
+#  definition = function(x, as.df = FALSE){
+#    if(!as.df){
+#      return(metadata(x)$mst)
+#    }else{
+#      dfs <- lapply(seq_along(metadata(x)$lineages), function(l){
+#        lin <- metadata(x)$lineages[[l]]
+#        mst <- metadata(x)$mst
+#        centers <- do.call(rbind, V(mst)$coordinates)
+#        rownames(centers) <- V(mst)$name
+#        return(data.frame(centers[lin,], Order = seq_along(lin), 
+#                          Lineage = l, Cluster = lin))
+#      })
+#      return(do.call(rbind, dfs))
+#    }
+#  }
+#)
+
+#slingMST_me <- function(x, as.df = FALSE) {
+#  
+#  if(!as.df){
+#    return(metadata(x)$mst)
+#  }else{
+#    dfs <- lapply(seq_along(metadata(x)$lineages), function(l){
+#      lin <- metadata(x)$lineages[[l]]
+#      mst <- metadata(x)$mst
+#      centers <- do.call(rbind, V(mst)$coordinates)
+#      rownames(centers) <- V(mst)$name
+#      return(data.frame(centers[lin,], Order = seq_along(lin), 
+#                        Lineage = l, Cluster = lin))
+#    })
+#    return(do.call(rbind, dfs))
+#  }
+#  
+#}
+
+
+
 
 ####----UI----####
 
@@ -160,13 +200,20 @@ ui <-
                                                            uiOutput("rendSelectPreCalc2")
                                                     )
                                                   ),
-                                                  h4("Transform Expression Data"),
+                                                  fluidRow(
+                                                    column(5, style = "margin-top:-15px;padding-right:2px",
+                                                           checkboxInput("AddTrajLines","Add Trajectory", value = F)
+                                                    ),
+                                                    column(7, style = "margin-top:-24px;padding-left:2px;",
+                                                           uiOutput("rendCurveOrLin")
+                                                    )
+                                                  ),
                                                   fluidRow(
                                                     column(6,
-                                                           checkboxInput("LogExprMatrix","Log Matrix", value = F)
+                                                           uiOutput("rendTrajClustSelect")
                                                     ),
                                                     column(6,
-                                                           checkboxInput("NormExprMatrix","Scale Normalize Matrix", value = F)
+                                                           uiOutput("rendTrajClustStart")
                                                     )
                                                   ),
                                                   h4("Annotate UMAP"),
@@ -297,14 +344,14 @@ ui <-
                                        ),
                                        fluidRow(
                                          #column(5, style = 'padding-right:4px;',
-                                                uiOutput("rendBPstatComp"),
+                                         uiOutput("rendBPstatComp"),
                                          #),
                                          #column(4, #style = 'padding-right:4px;padding-left:4px;',
-                                                uiOutput("rendVplotsampledots"),
-                                                uiOutput("rendErrorBP"),
+                                         uiOutput("rendVplotsampledots"),
+                                         uiOutput("rendErrorBP"),
                                          #),
                                          #column(3, #style = 'padding-left:4px;',
-                                                uiOutput("rendVplotDotSize")
+                                         uiOutput("rendVplotDotSize")
                                          #)
                                        ),
                                        #fluidRow(
@@ -395,14 +442,14 @@ ui <-
                               column(6,
                                      selectInput("EnrichFeat1","Feature One:", choices = anno_options, selected = PreSelect_Annotation1),
                                      uiOutput("rendEnrichVar1")
-                                     ),
+                              ),
                               column(6,
                                      selectInput("EnrichFeat2","Feature Two:", choices = anno_options, selected = PreSelect_Annotation2),
                                      uiOutput("rendEnrichVar2")
-                                     )
+                              )
                             ),
                             radioButtons("FisherTailChoice","",choices = c("Two-Tailed" = "two.sided","One-Tailed - Greater" = "greater","One-Tailed - Less" = "less"), inline = T)
-                            ),
+                          ),
                           mainPanel(
                             withSpinner(jqui_resizable(plotOutput("EnrichVennPlot", height = "450px", width = "100%"))),
                             hr(),
@@ -411,13 +458,15 @@ ui <-
                             fluidRow(
                               column(6,
                                      tableOutput("EnrichFisherTab")
-                                     ),
+                              ),
                               column(6,
                                      verbatimTextOutput("EnrichFisherOut")
-                                     )
+                              )
                             )
                           )
-                          )))
+                        )
+                      )
+             )
   )
 
 
@@ -425,8 +474,6 @@ ui <-
 
 
 server <- function(input, output, session) {
-  
-  #load_data()
   
   ####----Render UI----####
   
@@ -457,8 +504,40 @@ server <- function(input, output, session) {
     
   })
   
+  output$rendTrajClustSelect <- renderUI({
+    
+    if (input$AddTrajLines) {
+      selectInput("TrajClustSelect","Trajectory Clusters:", choices = anno_options, multiple = F, selected = PreSelect_Annotation1)
+    }
+    
+  })
+  
+  output$rendCurveOrLin <- renderUI({
+    
+    if (input$AddTrajLines) {
+      radioButtons("CurveOrLin","", choices = c("Curves","Min Spanning Tree"), inline = T)
+    }
+    
+  })
+  
+  output$rendTrajClustStart <- renderUI({
+    
+    if (input$AddTrajLines) {
+      if (!is.null(input$TrajClustSelect)) {
+        StartChoices <- c(" ",unique(meta[,input$TrajClustSelect]))
+        selectInput("TrajClustStart","Starting Cluster:", choices = StartChoices, multiple = F)
+      }
+    }
+    
+  })
+  
   output$rendUMAPannotateSamps1 <- renderUI({
     
+    #if (input$AddTrajLines) {
+    #  sce_umap <- SlingShot_react()
+    #  pseudo_df <- sce_umap@colData@listData[["slingshot"]]@assays@data@listData[["pseudotime"]]
+    #  
+    #}
     selectInput("UMAPannotateSamps1","Annotate Samples By:", choices = anno_options, multiple = F, selected = PreSelect_Annotation1)
     
   })
@@ -546,7 +625,7 @@ server <- function(input, output, session) {
     if (input$ViolinOrBoxP %in% c("Violin Plot","Box Plot","Barplot")) {
       column(5,
              selectInput("BPstatComp","Stat Test Method:",
-                  choices = c("none","wilcox.test","t.test","kruskal.test","anova"))
+                         choices = c("none","wilcox.test","t.test","kruskal.test","anova"))
       )
     }
     
@@ -557,7 +636,7 @@ server <- function(input, output, session) {
     if (input$ViolinOrBoxP == "Barplot") {
       column(6,
              selectInput("ErrorBP","Error Bar Type",
-                  choices = c("Standard Deviation","Standard Error","None"), width = "150%")
+                         choices = c("Standard Deviation","Standard Error","None"), width = "150%")
       )
     }
     
@@ -578,7 +657,7 @@ server <- function(input, output, session) {
     if (!input$ViolinOrBoxP %in% c("Barplot","Stacked Barplot")) {
       column(3,
              numericInput("VplotDotSize","Dot Size:", value =1, step = 0.25)
-             )
+      )
       
     }
     
@@ -733,7 +812,9 @@ server <- function(input, output, session) {
     
     tdata_fit_df <- UMAP_PreC_CoordTable_react()
     if (ncol(tdata_fit_df) > 0) {
-      tdata_fit_df <- UMAP_PreC_CoordTable_react()
+      umap1 <- input$SelectPreCalc1
+      umap2 <- input$SelectPreCalc2
+      colnames(tdata_fit_df)[c(2,3)] <- c(umap1,umap2)
       #table output,
       DT::datatable(tdata_fit_df,
                     options = list(keys = TRUE,
@@ -796,6 +877,31 @@ server <- function(input, output, session) {
   })
   
   ####----Plots----####
+  
+  SlingShot_react <- reactive({
+    
+    umap1 <- input$SelectPreCalc1
+    umap2 <- input$SelectPreCalc2
+    TrajCluster <- input$TrajClustSelect
+    TrajClusterStart <- input$TrajClustStart
+    if (TrajClusterStart == " ") {
+      TrajClusterStart <- NULL
+    }
+    
+    rd_umap <- meta[,c("SampleName",umap1,umap2)]
+    rownames(rd_umap) <- rd_umap[,1]
+    rd_umap <- rd_umap[,-1]
+    rd_umap <- as.matrix(rd_umap)
+    reducedDims(sce) <- SimpleList(UMAP = rd_umap)
+    
+    cluster_info <- meta[,TrajCluster]
+    names(cluster_info) <- meta[,1]
+    colData(sce)$cluster_info <- cluster_info
+    
+    sce_umap <- slingshot(sce, clusterLabels = 'cluster_info', reducedDim = 'UMAP', start.clus = TrajClusterStart)
+    sce_umap
+    
+  })
   
   ####----UMAP Clin1----####
   
@@ -915,6 +1021,8 @@ server <- function(input, output, session) {
     sampSelected <- input$UMAPsampSelect         # Sample Names to annotate
     metaColanno1 <- NULL
     metaColanno2 <- NULL
+    TrajLines <- input$AddTrajLines
+    TrajCluster <- input$TrajClustSelect
     
     plot_df <- UMAP_PreC_CoordTable_react()
     rownames(plot_df) <- plot_df[,1]
@@ -980,9 +1088,56 @@ server <- function(input, output, session) {
                         arrowsize = .5)
     }
     
+    if (TrajLines) {
+      if (!is.null(TrajCluster)) {
+        
+        sce_umap <- SlingShot_react()
+        
+        if (input$CurveOrLin == "Curves") {
+          for (i in seq_along(slingCurves(sce_umap))) {
+            curve_i <- slingCurves(sce_umap)[[i]]
+            curve_i <- curve_i$s[curve_i$ord, ]
+            colnames(curve_i) <- c("UMAP_1", "UMAP_2")
+            curve_i <- as.data.frame(curve_i)
+            k2 <- k2 %>% add_trace(data = curve_i, x = curve_i$UMAP_1, y = curve_i$UMAP_2, mode = "lines",
+                                   hoverinfo='skip',
+                                   line = list(color = 'black'))
+          }
+        } else {
+          mst <- slingMST(sce_umap, as.df = TRUE)
+          mst_arr <- mst %>% arrange(Order)
+          k2 <- k2 %>% add_trace(data = mst %>% arrange(Order), x = mst_arr$UMAP_1, y = mst_arr$UMAP_2, mode = "lines",
+                                 hoverinfo='skip',
+                                 line = list(color = 'black'))
+          k2 <- k2 %>% add_trace(data = mst %>% arrange(Order), x = mst_arr$UMAP_1, y = mst_arr$UMAP_2, mode = "markers",
+                                 hoverinfo='skip',
+                                 marker = list(size = 10, color = 'black'))
+        }
+      }
+    }
+    
     k2
     
   })
+  
+  
+  #slingMST <- function(x, as.df = FALSE) {
+  #  
+  #  if(!as.df){
+  #    return(metadata(x)$mst)
+  #  }else{
+  #    dfs <- lapply(seq_along(metadata(x)$lineages), function(l){
+  #      lin <- metadata(x)$lineages[[l]]
+  #      mst <- metadata(x)$mst
+  #      centers <- do.call(rbind, V(mst)$coordinates)
+  #      rownames(centers) <- V(mst)$name
+  #      return(data.frame(centers[lin,], Order = seq_along(lin), 
+  #                        Lineage = l, Cluster = lin))
+  #    })
+  #    return(do.call(rbind, dfs))
+  #  }
+  #  
+  #}
   
   ####----UMAP Expr----####
   
@@ -1077,31 +1232,6 @@ server <- function(input, output, session) {
                                 sep = "")))
     }
     
-    
-    
-    
-    
-    #if (input$UMAPannotateSamps != " ") {
-    #  colnames(plot_df)[c(4,5)] <- c("AnnoName","GeneName")
-    #  k <- plot_df %>%
-    #    ggplot(aes(UMAP1, UMAP2, colour=GeneName,
-    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
-    #                            "</br> <b>",metaColanno,":</b> ", AnnoName,
-    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-    #                            "</br> <b>Cluster:</b> ", Cluster,
-    #                            sep = "")))
-    #}
-    #if (input$UMAPannotateSamps == " ") {
-    #  colnames(plot_df)[4] <- "GeneName"
-    #  k <- plot_df %>%
-    #    ggplot(aes(UMAP1, UMAP2, colour=GeneName,
-    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
-    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-    #                            "</br> <b>Cluster:</b> ", Cluster,
-    #                            sep = "")))
-    #}
-    
-    
     k <- k + geom_point(shape = 19,
                         size = UMAPdotSize) +
       
@@ -1138,6 +1268,8 @@ server <- function(input, output, session) {
     sampSelected <- input$UMAPsampSelect         # Sample Names to annotate
     metaColanno1 <- NULL
     metaColanno2 <- NULL
+    TrajLines <- input$AddTrajLines
+    TrajCluster <- input$TrajClustSelect
     
     plot_df <- UMAP_PreC_CoordTable_react()
     rownames(plot_df) <- plot_df[,1]
@@ -1178,16 +1310,6 @@ server <- function(input, output, session) {
       }
     }
     
-    #if (length(sampSelected) > 0) {
-    #  plotdata <- plot_df[sampSelected,]
-    #  plotlabel <- rownames(plot_df[sampSelected,])
-    #  if (!is.null(metaColanno)) {
-    #    colnames(plotdata)[c(4,5)] <- c("AnnoName","GeneName")
-    #  }
-    #  if (is.null(metaColanno)) {
-    #    colnames(plotdata)[4] <- "GeneName"
-    #  }
-    #}
     
     ## Make it plotly
     k2 <- ggplotly(k,
@@ -1211,6 +1333,34 @@ server <- function(input, output, session) {
                         showarrow = TRUE,
                         arrowhead = 4,
                         arrowsize = .5)
+    }
+    
+    if (TrajLines) {
+      if (!is.null(TrajCluster)) {
+        
+        sce_umap <- SlingShot_react()
+        
+        if (input$CurveOrLin == "Curves") {
+          for (i in seq_along(slingCurves(sce_umap))) {
+            curve_i <- slingCurves(sce_umap)[[i]]
+            curve_i <- curve_i$s[curve_i$ord, ]
+            colnames(curve_i) <- c("UMAP_1", "UMAP_2")
+            curve_i <- as.data.frame(curve_i)
+            k2 <- k2 %>% add_trace(data = curve_i, x = curve_i$UMAP_1, y = curve_i$UMAP_2, mode = "lines",
+                                   hoverinfo='skip',
+                                   line = list(color = 'black'))
+          }
+        } else {
+          mst <- slingMST(sce_umap, as.df = TRUE)
+          mst_arr <- mst %>% arrange(Order)
+          k2 <- k2 %>% add_trace(data = mst %>% arrange(Order), x = mst_arr$UMAP_1, y = mst_arr$UMAP_2, mode = "lines",
+                                 hoverinfo='skip',
+                                 line = list(color = 'black'))
+          k2 <- k2 %>% add_trace(data = mst %>% arrange(Order), x = mst_arr$UMAP_1, y = mst_arr$UMAP_2, mode = "markers",
+                                 hoverinfo='skip',
+                                 marker = list(size = 10, color = 'black'))
+        }
+      }
     }
     
     k2
@@ -1328,88 +1478,6 @@ server <- function(input, output, session) {
     }
     k
     
-    ### Variables
-    #sampSelected <- input$UMAPsampSelect         # Sample Names to annotate
-    #UMAPtitleText <- input$UMAPtitleTextSize     # Title text size
-    #UMAPaxisText <- input$UMAPaxisTextSize       # Axis text size
-    #UMAPlegendText <- input$UMAPlegendTextSize   # Legend text size
-    #UMAPdotSize <- input$UMAPdotSize             # Dot size
-    #metaColanno <- NULL
-    #
-    #umap1 <- input$SelectPreCalc1
-    #umap2 <- input$SelectPreCalc2
-    #
-    #plot_df <- UMAP_PreC_CoordTable_react()
-    #rownames(plot_df) <- plot_df[,1]
-    #if (input$UMAPannotateSamps != " ") {
-    #  metaColanno <- input$UMAPannotateSamps
-    #  if (input$UMAPannoContCheck != T) {
-    #    plot_df[,metaColanno] <- as.factor(plot_df[,metaColanno])
-    #  }
-    #}
-    #if (!is.null(input$GeneSelection)) {
-    #  metaColgene <- input$GeneSelection
-    #}
-    #if (is.null(input$GeneSelection)) {
-    #  metaColgene <- rownames(expr)[1]
-    #}
-    #metaColkmean <- "Cluster"
-    #
-    ### Cluster Annotation Plot
-    #if (input$UMAPannotateSamps != " ") {
-    #  colnames(plot_df)[c(4,5)] <- c("AnnoName","GeneName")
-    #  k <- plot_df %>%
-    #    ggplot(aes(UMAP1, UMAP2, colour=Cluster,
-    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
-    #                            "</br> <b>",metaColanno,":</b> ", AnnoName,
-    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-    #                            "</br> <b>Cluster:</b> ", Cluster,
-    #                            sep = "")))
-    #}
-    #if (input$UMAPannotateSamps == " ") {
-    #  colnames(plot_df)[4] <- "GeneName"
-    #  k <- plot_df %>%
-    #    ggplot(aes(UMAP1, UMAP2, colour=Cluster,
-    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
-    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-    #                            "</br> <b>Cluster:</b> ", Cluster,
-    #                            sep = "")))
-    #}
-    #
-    #
-    #k <- k + geom_point(shape = 19,
-    #                    size = UMAPdotSize) +
-    #  
-    #  theme_minimal()
-    #
-    #if (input$UMAPannotateSamps != " ") {
-    #  metaColanno <- input$UMAPannotateSamps
-    #  k <- k + labs(x = umap1,
-    #                y = umap2,
-    #                color = "Cluster")
-    #}
-    #if (input$UMAPannotateSamps == " ") {
-    #  k <- k + labs(x = umap1,
-    #                y = umap2,)
-    #}
-    #
-    #k <- k + theme(axis.text = element_text(size = UMAPaxisText),
-    #               axis.title = element_text(size = UMAPaxisText),
-    #               plot.title = element_text(size = UMAPtitleText),
-    #               legend.text=element_text(size=UMAPlegendText))
-    #
-    #if (length(sampSelected) > 0) {
-    #  plotdata <- plot_df[sampSelected,]
-    #  plotlabel <- rownames(plot_df[sampSelected,])
-    #  k <- k + geom_point(data = plotdata,
-    #                      aes(x = UMAP1, y = UMAP2),
-    #                      pch = 1,
-    #                      color = "black",
-    #                      size = UMAPdotSize,
-    #                      stroke = .3)
-    #}
-    #k
-    
   })
   
   umap_plot_PreC_clin_react2 <- reactive({
@@ -1418,6 +1486,8 @@ server <- function(input, output, session) {
     sampSelected <- input$UMAPsampSelect         # Sample Names to annotate
     metaColanno1 <- NULL
     metaColanno2 <- NULL
+    TrajLines <- input$AddTrajLines
+    TrajCluster <- input$TrajClustSelect
     
     plot_df <- UMAP_PreC_CoordTable_react()
     rownames(plot_df) <- plot_df[,1]
@@ -1483,70 +1553,36 @@ server <- function(input, output, session) {
                         arrowsize = .5)
     }
     
+    if (TrajLines) {
+      if (!is.null(TrajCluster)) {
+        
+        sce_umap <- SlingShot_react()
+        
+        if (input$CurveOrLin == "Curves") {
+          for (i in seq_along(slingCurves(sce_umap))) {
+            curve_i <- slingCurves(sce_umap)[[i]]
+            curve_i <- curve_i$s[curve_i$ord, ]
+            colnames(curve_i) <- c("UMAP_1", "UMAP_2")
+            curve_i <- as.data.frame(curve_i)
+            k2 <- k2 %>% add_trace(data = curve_i, x = curve_i$UMAP_1, y = curve_i$UMAP_2, mode = "lines",
+                                   hoverinfo='skip',
+                                   line = list(color = 'black'))
+          }
+        } else {
+          mst <- slingMST(sce_umap, as.df = TRUE)
+          mst_arr <- mst %>% arrange(Order)
+          k2 <- k2 %>% add_trace(data = mst %>% arrange(Order), x = mst_arr$UMAP_1, y = mst_arr$UMAP_2, mode = "lines",
+                                 hoverinfo='skip',
+                                 line = list(color = 'black'))
+          k2 <- k2 %>% add_trace(data = mst %>% arrange(Order), x = mst_arr$UMAP_1, y = mst_arr$UMAP_2, mode = "markers",
+                                 hoverinfo='skip',
+                                 marker = list(size = 10, color = 'black'))
+        }
+      }
+    }
+    
     k2
     
-    ### Variables
-    #sampSelected <- input$UMAPsampSelect         # Sample Names to annotate
-    #metaColanno <- NULL
-    #
-    #plot_df <- UMAP_PreC_CoordTable_react()
-    #rownames(plot_df) <- plot_df[,1]
-    #
-    #umap1 <- input$SelectPreCalc1
-    #umap2 <- input$SelectPreCalc2
-    #
-    #if (input$UMAPannotateSamps != " ") {
-    #  metaColanno <- input$UMAPannotateSamps
-    #  if (input$UMAPannoContCheck != T) {
-    #    plot_df[,metaColanno] <- as.factor(plot_df[,metaColanno])
-    #  }
-    #}
-    #if (!is.null(input$GeneSelection)) {
-    #  metaColgene <- input$GeneSelection
-    #}
-    #if (is.null(input$GeneSelection)) {
-    #  metaColgene <- rownames(expr)[1]
-    #}
-    #metaColkmean <- "Cluster"
-    #
-    #
-    #k <- umap_plot_PreC_kmean_react_base()
-    #
-    #if (length(sampSelected) > 0) {
-    #  plotdata <- plot_df[sampSelected,]
-    #  plotlabel <- rownames(plot_df[sampSelected,])
-    #  if (!is.null(metaColanno)) {
-    #    colnames(plotdata)[c(4,5)] <- c("AnnoName","GeneName")
-    #  }
-    #  if (is.null(metaColanno)) {
-    #    colnames(plotdata)[4] <- "GeneName"
-    #  }
-    #}
-    #
-    ### Make it plotly
-    #k2 <- ggplotly(k,
-    #               tooltip = "text") %>% 
-    #  
-    #  config(displayModeBar = F)  %>% 
-    #  
-    #  layout(font=list(color="#black"),
-    #         xaxis=list(title=umap1,zeroline=F),
-    #         yaxis=list(title=umap2,zeroline=F)) 
-    #
-    #k2 <- k2 %>%
-    #  hide_legend()
-    #
-    #if (length(sampSelected) > 0) {
-    #  k2 <- k2 %>%
-    #    add_annotations(x = plotdata$UMAP1,
-    #                    y = plotdata$UMAP2,
-    #                    text = rownames(plotdata),
-    #                    showarrow = TRUE,
-    #                    arrowhead = 4,
-    #                    arrowsize = .5)
-    #}
-    #
-    #k2
     
   })
   
@@ -2359,6 +2395,36 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       plot <- umap_plot_PreC_clin_react_base1()
+      #TrajCluster <- input$TrajClustSelect
+      #umap1 <- input$SelectPreCalc1
+      #umap2 <- input$SelectPreCalc2
+      #if (input$AddTrajLines) {
+      #  if (!is.null(TrajCluster)) {
+      #    expr_mat <- as.matrix(expr)
+      #    sce <- SingleCellExperiment(assays = List(counts = expr_mat))
+      #    assays(sce)$norm <- assays(sce)$counts
+      #    
+      #    rd_umap <- meta[,c("SampleName",umap1,umap2)]
+      #    rownames(rd_umap) <- rd_umap[,1]
+      #    rd_umap <- rd_umap[,-1]
+      #    rd_umap <- as.matrix(rd_umap)
+      #    reducedDims(sce) <- SimpleList(UMAP = rd_umap)
+      #    
+      #    cluster_info <- meta[,TrajCluster]
+      #    names(cluster_info) <- meta[,1]
+      #    colData(sce)$cluster_info <- cluster_info
+      #    
+      #    sce_umap <- slingshot(sce, clusterLabels = 'cluster_info', reducedDim = 'UMAP')
+      #    
+      #    for (i in seq_along(slingCurves(sce_umap))) {
+      #      curve_i <- slingCurves(sce_umap)[[i]]
+      #      curve_i <- curve_i$s[curve_i$ord, ]
+      #      colnames(curve_i) <- c("UMAP_1", "UMAP_2")
+      #      curve_i <- as.data.frame(curve_i)
+      #      plot <- plot + geom_path(data = as.data.frame(curve_i), col = "black", linewidth = 1)
+      #    }
+      #  }
+      #}
       ggsave(file,plot, width = 8, height = 8)
     }
   )
@@ -2448,18 +2514,6 @@ server <- function(input, output, session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

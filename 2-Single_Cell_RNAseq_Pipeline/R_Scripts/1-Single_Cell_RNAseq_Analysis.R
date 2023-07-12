@@ -5,7 +5,7 @@
 ####---- User Input ----####
 
 ## Set local Github repository as working directory
-setwd("~/R/BERLIN")
+setwd("BERLIN")
 
 ## Desired project name
 Project_Name <- "GSE116256_AMLscRNA"

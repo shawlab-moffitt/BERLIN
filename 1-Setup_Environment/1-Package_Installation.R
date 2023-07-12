@@ -12,7 +12,7 @@ remotes::install_github("mojaveazure/seurat-disk")
 
 ## Install and load CRAN packages
 packages <- c("dplyr","Seurat","patchwork","readr","DoubletFinder",
-              "Matrix","fields","SeuratDisk","SeuratData","openxlsx")
+              "Matrix","fields","SeuratDisk","openxlsx")
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
   install.packages(packages[!installed_packages])

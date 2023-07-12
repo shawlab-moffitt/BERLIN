@@ -4,7 +4,7 @@
 ####---- User Input ----####
 
 ## Set local Github repository as working directory
-setwd("~/R/BERLIN")
+setwd("BERLIN")
 
 ## Load Functions from Customized ISCVAM H5 File
 source("2-Single_Cell_RNAseq_Pipeline/R_Scripts/R/write.h5.R")

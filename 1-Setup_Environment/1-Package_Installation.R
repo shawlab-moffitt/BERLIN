@@ -21,7 +21,7 @@ invisible(lapply(packages, library, character.only = TRUE))
 
 
 ## Install and load Bioconductor packages
-bioCpacks <- c("SingleR","celldex","SingleCellExperiment")
+bioCpacks <- c("SingleR","celldex","SingleCellExperiment","rhdf5)
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
 if (any(installed_packages_BIOC == FALSE)) {
   BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)

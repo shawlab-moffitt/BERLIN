@@ -22,13 +22,17 @@ PreSelect_Annotation1 <- 'seurat_clusters'
 PreSelect_Annotation2 <- 'CellType'
 
 
+GeneSet_File <- 'GeneSet_Data/GeneSet_List_HS_v5.RData'
+GeneSet_CatTab_File <- 'GeneSet_Data/GeneSet_CatTable_v5.zip'
+
+
 
 
 
 ####----Install and load packages----####
 
-packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","slingshot",
-              "ggdendro","factoextra","dplyr","DT","viridis","readr","tidyverse","ggrepel","ggVennDiagram",
+packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","slingshot","cowplot","patchwork",
+              "ggdendro","factoextra","dplyr","DT","viridis","readr","tidyverse","ggrepel","ggVennDiagram","ggtree",
               "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales","SingleCellExperiment")
 
 installed_packages <- packages %in% rownames(installed.packages())
@@ -37,7 +41,7 @@ if (any(installed_packages == FALSE)) {
 }
 invisible(lapply(packages, library, character.only = TRUE))
 #bioconductor packages
-bioCpacks <- c("clusterProfiler")
+bioCpacks <- c("clusterProfiler","GSVA")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
 if (any(installed_packages_BIOC == FALSE)) {
   BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
@@ -51,16 +55,16 @@ invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 meta_ext <- tools::file_ext(Meta_File)
 if (meta_ext == "csv") {
-  meta <- as.data.frame(read_delim(Meta_File, delim = ',', col_names = T))
+  metaIn <- as.data.frame(read_delim(Meta_File, delim = ',', col_names = T))
 }
 if (meta_ext != "csv") {
-  meta <- as.data.frame(read_delim(Meta_File, delim = '\t', col_names = T))
+  metaIn <- as.data.frame(read_delim(Meta_File, delim = '\t', col_names = T))
 }
-colnames(meta)[1] <- "SampleName"
-meta[,1] <- gsub("[[:punct:]]","_",meta[,1])
+colnames(metaIn)[1] <- "SampleName"
+metaIn[,1] <- gsub("[[:punct:]]","_",metaIn[,1])
 # Get variables for selection feature
-SamplesToSelect <- c("Select All Samples",meta[,1])
-anno_options_og <- colnames(meta)[2:ncol(meta)]
+SamplesToSelect <- c("Select All Samples",metaIn[,1])
+anno_options_og <- colnames(metaIn)[2:ncol(metaIn)]
 anno_options <- anno_options_og
 
 ##--Expression Data--##
@@ -92,27 +96,39 @@ expr <- as.data.frame(expr)
 rownames(expr) <- expr[,1]
 expr <- expr[,-1]
 
-expr_mat <- as.matrix(expr)
-sce <- SingleCellExperiment(assays = List(counts = expr_mat))
-assays(sce)$norm <- assays(sce)$counts
-
 # Get variables for selection feature
 GeneSymbols <- rownames(expr)
 
 ## Make sure Samples are in both expr and meta
-sampSame <- intersect(colnames(expr),meta[,1])
+sampSame <- intersect(colnames(expr),metaIn[,1])
 expr <- expr[,sampSame]
-meta <- meta[which(meta[,1] %in% sampSame),]
+metaIn <- metaIn[which(metaIn[,1] %in% sampSame),]
+
+expr <- expr[,metaIn$SampleName]
+
+expr_mat <- as.matrix(expr)
+sce <- SingleCellExperiment(assays = List(counts = expr_mat))
+assays(sce)$norm <- assays(sce)$counts
+
+loadRData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+geneset <- loadRData(GeneSet_File)
+GeneSet_CatTab <- as.data.frame(read_delim(GeneSet_CatTab_File,delim = '\t', col_names = T))
+GeneSet_Cats <- unique(GeneSet_CatTab[,1])
+
 
 Project_Name2 <- gsub("[[:punct:]]",".",Project_Name)
 Project_Name2 <- gsub(" ",".",Project_Name)
 
 
 if (is.null(PreSelect_UMAP1) || PreSelect_UMAP1 == "") {
-  PreSelect_UMAP1 <- colnames(meta)[2]
+  PreSelect_UMAP1 <- colnames(metaIn)[2]
 }
 if (is.null(PreSelect_UMAP2) || PreSelect_UMAP2 == "") {
-  PreSelect_UMAP2 <- colnames(meta)[3]
+  PreSelect_UMAP2 <- colnames(metaIn)[3]
 }
 if (is.null(PreSelect_Annotation1) || PreSelect_Annotation1 == "") {
   PreSelect_Annotation1 <- NULL
@@ -133,25 +149,13 @@ g_legend<-function(a.gplot){
   legend
 }
 
-#setMethod(
-#  f = "slingMST",
-#  signature = "PseudotimeOrdering",
-#  definition = function(x, as.df = FALSE){
-#    if(!as.df){
-#      return(metadata(x)$mst)
-#    }else{
-#      dfs <- lapply(seq_along(metadata(x)$lineages), function(l){
-#        lin <- metadata(x)$lineages[[l]]
-#        mst <- metadata(x)$mst
-#        centers <- do.call(rbind, V(mst)$coordinates)
-#        rownames(centers) <- V(mst)$name
-#        return(data.frame(centers[lin,], Order = seq_along(lin), 
-#                          Lineage = l, Cluster = lin))
-#      })
-#      return(do.call(rbind, dfs))
-#    }
-#  }
-#)
+## High-Low
+highlow = function(mat) {
+  new_mat = mat;
+  new_mat[mat > quantile(as.numeric(mat), na.rm = T)[3]] = "High";
+  new_mat[mat <= quantile(as.numeric(mat), na.rm = T)[3]] = "Low";
+  return (new_mat)
+}
 
 #slingMST_me <- function(x, as.df = FALSE) {
 #  
@@ -170,7 +174,6 @@ g_legend<-function(a.gplot){
 #  }
 #  
 #}
-
 
 
 
@@ -194,10 +197,12 @@ ui <-
                                                   h4("Plot Data"),
                                                   fluidRow(
                                                     column(6,
-                                                           uiOutput("rendSelectPreCalc1")
+                                                           selectInput("SelectPreCalc1","Select X-Axis Coordinate:",
+                                                                       choices = colnames(metaIn)[2:ncol(metaIn)], selected = PreSelect_UMAP1)
                                                     ),
                                                     column(6,
-                                                           uiOutput("rendSelectPreCalc2")
+                                                           selectInput("SelectPreCalc2","Select Y-Axis Coordinate:",
+                                                                       choices = colnames(metaIn)[2:ncol(metaIn)], selected = PreSelect_UMAP2)
                                                     )
                                                   ),
                                                   fluidRow(
@@ -216,44 +221,13 @@ ui <-
                                                            uiOutput("rendTrajClustStart")
                                                     )
                                                   ),
-                                                  h4("Annotate UMAP"),
+                                                  checkboxInput("AnnoPathway","Annotate Pathway Score", value = F),
+                                                  uiOutput("rendPathTabsetTab"),
+                                                  uiOutput("rendViewGeneSetGenes"),
+                                                  div(DT::dataTableOutput("GenesInGeneSetTab"), style = "font-size:10px"),
+                                                  hr(),
+                                                  h4("Annotate Samples"),
                                                   uiOutput("rendUMAPsampSelect"),
-                                                  tabsetPanel(
-                                                    id = "AnnoUMAP",
-                                                    tabPanel("Clinical",
-                                                             p(),
-                                                             fluidRow(
-                                                               column(8,
-                                                                      uiOutput("rendUMAPannotateSamps1")
-                                                               ),
-                                                               column(4,
-                                                                      checkboxInput("UMAPannoContCheck1","Continuous Variable")
-                                                               )
-                                                             ),
-                                                             fluidRow(
-                                                               column(8,
-                                                                      uiOutput("rendUMAPannotateSamps2")
-                                                               ),
-                                                               column(4,
-                                                                      checkboxInput("UMAPannoContCheck2","Continuous Variable")
-                                                               )
-                                                             ),
-                                                             value = 1),
-                                                    tabPanel("Expression",
-                                                             p(),
-                                                             fluidRow(
-                                                               column(4, style = 'padding-right:2px;',
-                                                                      uiOutput("rendGeneSelection")
-                                                               ),
-                                                               column(2, style = 'padding-right:0px;padding-left:2px;',
-                                                                      checkboxInput("LogGeneSelection","Log2",value = F)
-                                                               ),
-                                                               column(6, style = 'padding-left:0px;',
-                                                                      uiOutput("rendGeneExprRange")
-                                                               )
-                                                             ),
-                                                             value = 2)
-                                                  ),
                                                   value = 1),
                                          
                                          ####----Sidebar Figure Param Panel----####
@@ -305,6 +279,30 @@ ui <-
                           ),
                           mainPanel(
                             p(),
+                            fluidRow(
+                              column(4, style = 'padding-left:90px;',
+                                     uiOutput("rendUMAPannotateSamps1"),
+                                     style = 'border-right: 0.5px solid lightgray',
+                              ),
+                              column(4, style = 'padding-left:60px;',
+                                     fluidRow(
+                                       column(5, #style = 'padding-right:2px;',
+                                              uiOutput("rendGeneSelection")
+                                       ),
+                                       column(2, #style = 'padding-right:0px;padding-left:2px;',
+                                              checkboxInput("LogGeneSelection","Log2",value = F)
+                                       ),
+                                       column(5,
+                                              uiOutput("rendGeneExprRange")
+                                       )
+                                     ),
+                                     style = 'border-right: 0.5px solid lightgray',
+                              ),
+                              column(4, style = 'padding-left:70px;',
+                                     uiOutput("rendUMAPannotateSamps2")
+                              )
+                            ),
+                            p(),
                             uiOutput("rendUMAPplot_PreC_ALL"),
                             jqui_draggable(jqui_resizable(plotOutput('UMAPprecLegend', width = "100%", height = "110px"))),
                             p(),
@@ -343,25 +341,11 @@ ui <-
                                          )
                                        ),
                                        fluidRow(
-                                         #column(5, style = 'padding-right:4px;',
                                          uiOutput("rendBPstatComp"),
-                                         #),
-                                         #column(4, #style = 'padding-right:4px;padding-left:4px;',
                                          uiOutput("rendVplotsampledots"),
                                          uiOutput("rendErrorBP"),
-                                         #),
-                                         #column(3, #style = 'padding-left:4px;',
                                          uiOutput("rendVplotDotSize")
-                                         #)
                                        ),
-                                       #fluidRow(
-                                       #  column(6,
-                                       #         selectInput("errorbarplot","Error Bar Type",
-                                       #                     choices = c("Standard Deviation","Standard Error","None"))
-                                       #  ),
-                                       #  #column(6,
-                                       #  #       selectInput("BPstatComp","Stat Compare Method:", choices = c("none","wilcox.test","t.test","kruskal.test","anova")))
-                                       #),
                                        radioButtons("ViolinOrBoxP","View As:",choices = c("Violin Plot","Box Plot","Barplot","Stacked Barplot"), inline = T),
                                        uiOutput("rendBPfeatFill")
                               ),
@@ -371,7 +355,6 @@ ui <-
                                        hr(),
                                        fluidRow(
                                          column(6,
-                                                #uiOutput("rendbarplotsampledots")
                                                 checkboxInput("barplotsampledots","Include Dot Annotation", value = F)
                                          ),
                                          column(6,
@@ -466,7 +449,46 @@ ui <-
                           )
                         )
                       )
-             )
+             ),
+             
+             ####----Heatmap----####
+             
+             tabPanel("Heatmap",
+                      sidebarLayout(
+                        sidebarPanel(
+                          width = 3,
+                          p(),
+                          uiOutput("rendHeatSampSubset"),
+                          uiOutput("rendHeatSampCriteria"),
+                          uiOutput("rendHeatGroupCriteria"),
+                          uiOutput("rendHeatGroupSelect"),
+                          uiOutput("rendHeatGeneSelect"),
+                          fluidRow(
+                            column(4,
+                                   selectInput("ClusterMethodChoice","Cluster Method:",
+                                               choices = c("ward.D", "ward.D2", "complete", "single", "average", "mcquitty", "median", "centroid"))
+                                   ),
+                            column(4,
+                                   checkboxInput("ClusterCol","Cluster Cols", value = TRUE),
+                                   checkboxInput("ClusterRow","Cluster Rows", value = TRUE)
+                                   ),
+                            column(4,
+                                   checkboxInput("DotHeatChoice","As Dot Heatmap", value = F)
+                                   )
+                            )
+                          #fluidRow(
+                          #  column(4,
+                          #         ),
+                          #  column(8,
+                          #         uiOutput("rendDotHeatSizeFactor")
+                          #         )
+                          #)
+                          ),
+                        mainPanel(
+                          p(),
+                          withSpinner(jqui_resizable(plotOutput("HeatmapAvg", height = "800px",width = "100%")), type = 6)
+                        )
+                      ))
   )
 
 
@@ -477,19 +499,6 @@ server <- function(input, output, session) {
   
   ####----Render UI----####
   
-  output$rendSelectPreCalc1 <- renderUI({
-    
-    selectInput("SelectPreCalc1","Select X-Axis Coordinate Column:",
-                choices = colnames(meta)[2:ncol(meta)], selected = PreSelect_UMAP1)
-    
-  })
-  
-  output$rendSelectPreCalc2 <- renderUI({
-    
-    selectInput("SelectPreCalc2","Select Y-Axis Coordinate Column:",
-                choices = colnames(meta)[2:ncol(meta)], selected = PreSelect_UMAP2)
-    
-  })
   
   output$rendUMAPsampSelect <- renderUI({
     
@@ -522,34 +531,107 @@ server <- function(input, output, session) {
   
   output$rendTrajClustStart <- renderUI({
     
+    #meta <- meta_react()
+    #print(meta[1:5,1:5])
     if (input$AddTrajLines) {
       if (!is.null(input$TrajClustSelect)) {
-        StartChoices <- c(" ",unique(meta[,input$TrajClustSelect]))
+        StartChoices <- c(" ",unique(metaIn[,input$TrajClustSelect]))
         selectInput("TrajClustStart","Starting Cluster:", choices = StartChoices, multiple = F)
       }
     }
     
   })
   
+  
+  meta_react <- reactive({
+    
+    meta_update <- metaIn
+    if (input$AddTrajLines) {
+      sce_umap <- SlingShot_react()
+      pseudo_df <- as.data.frame(slingPseudotime(sce_umap))
+      pseudo_df$Pseudotime_Lineage_Avg <- rowMeans(pseudo_df, na.rm = T)
+      pseudo_df$SampleName <- rownames(pseudo_df)
+      meta_update <- merge(pseudo_df[,c(ncol(pseudo_df)-1,ncol(pseudo_df))],metaIn, by = "SampleName", all.x = T)
+    }
+    if (input$AnnoPathway) {
+      gsSelected <- GeneSetSelect_react()
+      if (length(names(gsSelected)) > 0) {
+          if (input$UMAPannotateSamps1 == names(gsSelected) | input$UMAPannotateSamps2 == names(gsSelected)) {
+            #if (input$UMAPannotateSamps1 == "Selected Geneset" | input$UMAPannotateSamps2 == "Selected Geneset") {
+            if (length(unname(unlist(gsSelected)) %in% rownames(expr_mat)) > 0) {
+              ssGSEA <- gsva(expr_mat,gsSelected,method = "ssgsea", verbose = FALSE)
+              ssGSEA <- as.data.frame(t(ssGSEA))
+              ssGSEA$SampleName <- rownames(ssGSEA)
+              #colnames(ssGSEA)[1] <- "Selected Geneset"
+              meta_update <- merge(ssGSEA,metaIn, by = "SampleName", all = T)
+            }
+          }
+      }
+    }
+    meta_update
+    
+  })
+  
+  Anno1Select <- reactiveValues(Annotation1Selected = PreSelect_Annotation1)
+  observeEvent(input$UMAPannotateSamps1, {
+    Anno1Select$Annotation1Selected <- input$UMAPannotateSamps1
+  })
   output$rendUMAPannotateSamps1 <- renderUI({
     
-    #if (input$AddTrajLines) {
-    #  sce_umap <- SlingShot_react()
-    #  pseudo_df <- sce_umap@colData@listData[["slingshot"]]@assays@data@listData[["pseudotime"]]
-    #  
-    #}
-    selectInput("UMAPannotateSamps1","Annotate Samples By:", choices = anno_options, multiple = F, selected = PreSelect_Annotation1)
+    if (input$AddTrajLines) {
+      anno_options <- c("Pseudotime_Lineage_Avg",anno_options)
+    }
+    if (input$AnnoPathway) {
+      gsSelected <- GeneSetSelect_react()
+      geneset_name <- names(gsSelected)
+      anno_options <- c(geneset_name,anno_options)
+      #anno_options <- c("Selected Geneset",anno_options)
+    }
+    selectInput("UMAPannotateSamps1","Annotate Samples By:", choices = anno_options, multiple = F, selected = Anno1Select$Annotation1Selected)
     
+  })
+  Anno2Select <- reactiveValues(Annotation2Selected = PreSelect_Annotation2)
+  observeEvent(input$UMAPannotateSamps2, {
+    Anno2Select$Annotation2Selected <- input$UMAPannotateSamps2
   })
   output$rendUMAPannotateSamps2 <- renderUI({
     
-    selectInput("UMAPannotateSamps2","Annotate Samples By:", choices = anno_options, multiple = F, selected = PreSelect_Annotation2)
+    if (input$AddTrajLines) {
+      anno_options <- c("Pseudotime_Lineage_Avg",anno_options)
+    }
+    if (input$AnnoPathway) {
+      gsSelected <- GeneSetSelect_react()
+      geneset_name <- names(gsSelected)
+      anno_options <- c(geneset_name,anno_options)
+    }
+    selectInput("UMAPannotateSamps2","Annotate Samples By:", choices = anno_options, multiple = F, selected = Anno2Select$Annotation2Selected)
+    
+  })
+  
+  DiscContList_react <- reactive({
+    
+    ## Check which columns of covs are discrete or continuous
+    meta <- meta_react()
+    covs <- meta
+    covsClass <- sapply(as_tibble(covs), typeof)
+    covsClass_num <- names(covsClass[which(covsClass %in% c("integer","double"))])
+    IntCovsaCols <- apply(covs[,covsClass_num],2,function(x) any(round(as.numeric(x)) != x))
+    MaybeCont <- names(IntCovsaCols[which(IntCovsaCols == FALSE)])
+    MaybeContData <- apply(covs[,MaybeCont],2,function(x) any(length(levels(as.factor(x)))<(nrow(covs)*0.60)))
+    ContinuousData <- names(MaybeContData[which(MaybeContData == FALSE)])
+    ContinuousData <- c(ContinuousData,names(IntCovsaCols[which(IntCovsaCols == TRUE)]))
+    
+    covs.continuous <- covs[,which(colnames(covs) %in% ContinuousData)]
+    covs.discrete <- covs[,which(!colnames(covs) %in% ContinuousData)]
+    
+    DiscContList <- list(discreteCovs=colnames(covs.discrete), continuousCovs=colnames(covs.continuous))
+    DiscContList
     
   })
   
   output$rendGeneSelection <- renderUI({
     
-    selectizeInput("GeneSelection","Gene:", choices = GeneSymbols)
+    selectizeInput("GeneSelection","Feature:", choices = GeneSymbols)
     
   })
   
@@ -560,9 +642,11 @@ server <- function(input, output, session) {
     if (LogChoice == TRUE) {
       expr <- log2(as.matrix(expr) + 1)
     }
-    exprRange <- round(range(expr[geneSelec,]),2)
+    exprVal <- expr[geneSelec,][!is.na(expr[geneSelec,])]
+    #exprRange <- round(range(expr[geneSelec,], na.rm = T),2)
+    exprRange <- round(range(exprVal, na.rm = T),2)
     exprRangeText <- paste(exprRange[1],",",exprRange[2],sep = "")
-    textInput("GeneExprRange","Expression Range:",value = exprRangeText, placeholder = "min,max")
+    textInput("GeneExprRange","Range:",value = exprRangeText, placeholder = "min,max")
     
   })
   
@@ -583,6 +667,7 @@ server <- function(input, output, session) {
   
   output$rendBPsampCriteria <- renderUI({
     
+    meta <- meta_react()
     SampSubset <- input$BPsampSubset
     if (!is.null(SampSubset)) {
       if (SampSubset != "Select All") {
@@ -595,12 +680,14 @@ server <- function(input, output, session) {
   
   output$rendBPgroupCriteria <- renderUI({
     
-    selectInput("BPgroupCriteria","Bar Plot Grouping Criteria:", choices = anno_options, selected = "seurat_clusters")
+    DiscContList <- DiscContList_react()
+    selectInput("BPgroupCriteria","Bar Plot Grouping Criteria:", choices = DiscContList$discreteCovs, selected = "seurat_clusters")
     
   })
   
   output$rendBPgeneSelection <- renderUI({
     
+    meta <- meta_react()
     FeatureChoice <- c(GeneSymbols,colnames(meta)[-1])
     selectizeInput("BPgeneSelection","Select Feature:", choices = FeatureChoice)
     
@@ -675,6 +762,7 @@ server <- function(input, output, session) {
   
   output$rendEnrichVar1 <- renderUI({
     
+    meta <- meta_react()
     Feat1 <- input$EnrichFeat1
     VarChoices <- unique(meta[,Feat1])
     selectInput("EnrichVar1", "Variable from Feature One:", choices = VarChoices, selected = VarChoices[1])
@@ -683,11 +771,217 @@ server <- function(input, output, session) {
   
   output$rendEnrichVar2 <- renderUI({
     
+    meta <- meta_react()
     Feat2 <- input$EnrichFeat2
     VarChoices <- unique(meta[,Feat2])
     selectInput("EnrichVar2", "Variable from Feature Two:", choices = VarChoices, selected = VarChoices[1])
     
   })
+  
+  output$rendPathTabsetTab <- renderUI({
+    
+    if (input$AnnoPathway) {
+      
+      tabsetPanel(
+        id = "GeneSetPanel",
+        tabPanel("Provided Genesets",
+                 p(),
+                 selectInput("gsDatabase","Select Geneset Database:", choices = GeneSet_Cats),
+                 div(DT::dataTableOutput("GeneSetTable"), style = "font-size:10px"),
+                 value = 1
+                 ),
+        tabPanel("User Genesets",
+                 p(),
+                 fileInput("userGeneSet","Upload Geneset"),
+                 div(DT::dataTableOutput("userGeneSetTable"), style = "font-size:10px"),
+                 value = 2
+                 )
+      )
+      
+    }
+    
+  })
+  
+  output$rendViewGeneSetGenes <- renderUI({
+    
+    if (input$AnnoPathway) {
+      checkboxInput("ViewGeneSetGenes","View genes in selected geneset", value = FALSE)
+    }
+    
+  })
+  
+  GeneSetTable_React <- reactive({
+    
+    GS_database <- input$gsDatabase
+    sub_tab <- GeneSet_CatTab[which(GeneSet_CatTab[,1] == GS_database),]
+    new_tab <- sub_tab[,-c(1,2)]
+    new_tab
+    
+  })
+  
+  ## Render Gene Set Selection Table
+  output$GeneSetTable <- renderDataTable({
+    
+    GeneSetTable_sub <- GeneSetTable_React()
+    DT::datatable(GeneSetTable_sub,
+                  options = list(lengthMenu = c(5,10, 20, 100, 1000),
+                                 pageLength = 10,
+                                 scrollX = T),
+                  selection = list(mode = 'single', selected = 1),
+                  rownames = F)
+    
+  })
+  
+  userGeneSet_react <- reactive({
+    
+    gs.u <- input$userGeneSet
+    ext <- tools::file_ext(gs.u$datapath)
+    req(gs.u)
+    
+    # If user provides GMT file
+    if (ext == "gmt") {
+      gs_u <- clusterProfiler::read.gmt(gs.u$datapath)
+      colnames(gs_u) <- c("term","gene")
+      gs_u
+    } else if (ext == "RData") {
+      gs_u <- loadRData(gs.u$datapath)
+      gs_u
+    } else {
+      gs_u <- as.data.frame(readr::read_delim(gs.u$datapath, delim = '\t'))
+      colnames(gs_u) <- c("term","gene")
+      gs_u
+    }
+    
+  })
+  
+  userGeneSet_select <- reactive({
+    
+    gs_u <- userGeneSet_react()
+    gs_tab <- userGeneSetTable_react()
+    geneset_select <- gs_tab[input$userGeneSetTable_rows_selected,1]
+    gsU_name <- input$userGeneSet
+    ext <- tools::file_ext(gsU_name$datapath)
+    
+    if (ext == "RData") {
+      gs_u_select <- gs_u[geneset_select]
+      print(head(gs_u_select))
+      gs_u_select
+    } else {
+      tab_select <- gs_u[which(gs_u[,1] == geneset_select),]
+      gs_u_select <- list()
+      for (i in unique(tab_select[,1])){
+        gs_u_select[[i]] <- tab_select[tab_select[,1] == i,]$gene
+      }
+      gs_u_select
+    }
+    
+  })
+  
+  ## Render User Gene Set Table - Backend
+  userGeneSetTable_react <- reactive({
+    
+    fileIn <- input$userGeneSet
+    ext <- tools::file_ext(fileIn$datapath)
+    gs_u <- userGeneSet_react()
+    
+    # If user provides GMT file
+    if (ext == "gmt") {
+      uGS_table <- as.data.frame(unique(gs_u[,1]))
+      colnames(uGS_table)[1] <- "GeneSet"
+    } else if (ext == "RData") {
+      uGS_table <- as.data.frame(names(gs_u))
+      colnames(uGS_table)[1] <- "GeneSet"
+    } else {
+      uGS_table <- as.data.frame(unique(gs_u[,1]))
+      colnames(uGS_table)[1] <- "GeneSet"
+    }
+    uGS_table
+    
+  })
+  
+  ## Render User Gene Set Table
+  output$userGeneSetTable <- renderDataTable({
+    
+    req(input$userGeneSet)
+    uGS_table <- userGeneSetTable_react()
+    DT::datatable(uGS_table,
+                  options = list(lengthMenu = c(5,10, 20, 100, 1000),
+                                 pageLength = 10,
+                                 scrollX = T),
+                  selection = list(mode = 'single', selected = 1),
+                  rownames = F)
+    
+    
+  })
+  
+  GeneSetSelect_react <- reactive({
+    if (input$AnnoPathway) {
+      if (!is.null(input$GeneSetPanel)) {
+        if (input$GeneSetPanel == 1) {
+          gsTable <- GeneSetTable_React()
+          GeneSet_Name <- gsTable[input$GeneSetTable_rows_selected,2]
+          GeneSetSelect <- geneset[GeneSet_Name]
+          GeneSetSelect
+        } else if (input$GeneSetPanel == 2) {
+          GeneSetSelect <- userGeneSet_select()
+          GeneSetSelect
+        }
+      }
+    }
+    
+  })
+  
+  output$rendHeatSampSubset <- renderUI({
+    
+    anno_options2 <- c("Select All",anno_options_og)
+    selectInput("HeatSampSubset","Subset Samples By:", choices = anno_options2)
+    
+  })
+  
+  output$rendHeatSampCriteria <- renderUI({
+    
+    meta <- meta_react()
+    SampSubset <- input$HeatSampSubset
+    if (!is.null(SampSubset)) {
+      if (SampSubset != "Select All") {
+        SubsetOptions <- unique(meta[,SampSubset])
+        selectInput("HeatSampCriteria",paste(SampSubset,"Criteria:"), choices = SubsetOptions)
+      }
+    }
+    
+  })
+  
+  output$rendHeatGroupCriteria <- renderUI({
+    
+    DiscContList <- DiscContList_react()
+    selectInput("HeatGroupCriteria","Heatmap Grouping Criteria:", choices = DiscContList$discreteCovs, selected = "seurat_clusters")
+    
+  })
+  
+  output$rendHeatGroupSelect <- renderUI({
+    
+    GroupingCol <- input$HeatGroupCriteria
+    meta <- meta_react()
+    GroupCond <- unique(meta[,GroupingCol])
+    selectInput("HeatGroupSelect","Group Coniditon:",
+                choices = GroupCond, selected = GroupCond[c(1:length(GroupCond))],
+                multiple = T)
+    
+  })
+  
+  output$rendHeatGeneSelect <- renderUI({
+    
+      selectizeInput(
+        "HeatGeneSelect", 
+        label = "Select or Paste (space delim) Features:",
+        choices = GeneSymbols, 
+        multiple = T,
+        selected = GeneSymbols[1:4],
+        options = list(delimiter = " ", create = T)
+    )
+    
+  })
+  
   
   ####----Reactives----####
   
@@ -713,6 +1007,7 @@ server <- function(input, output, session) {
   ## UMAP Coordinate Table  - Pre-Calculated
   umap_plot_table_PreC_react <- reactive({
     
+    meta <- meta_react()
     if (!is.null(input$SelectPreCalc1) && !is.null(input$SelectPreCalc2)) {
       umap1 <- input$SelectPreCalc1
       umap2 <- input$SelectPreCalc2
@@ -729,15 +1024,18 @@ server <- function(input, output, session) {
   
   UMAP_PreC_CoordTable_react <- reactive({
     
+    meta <- meta_react()
     tdata_fit_df <- umap_plot_table_PreC_react()
     
     ## Add Annotation column
     if (!is.null(input$UMAPannotateSamps1)) {
       if (input$UMAPannotateSamps1 != " ") {
-        metaColanno1 <- input$UMAPannotateSamps1
-        tdata_fit_df <- merge(tdata_fit_df,meta[,c("SampleName",metaColanno1)], by = "SampleName")
-        if (input$UMAPannoContCheck1 != T) {
-          tdata_fit_df[,metaColanno1] <- as.factor(tdata_fit_df[,metaColanno1])
+        if (input$UMAPannotateSamps1 %in% colnames(meta)) {
+          metaColanno1 <- input$UMAPannotateSamps1
+          tdata_fit_df <- merge(tdata_fit_df,meta[,c("SampleName",metaColanno1)], by = "SampleName")
+          if (metaColanno1 %in% DiscContList_react()$discreteCovs) {
+            tdata_fit_df[,metaColanno1] <- as.factor(tdata_fit_df[,metaColanno1])
+          }
         }
       }
     }
@@ -749,7 +1047,7 @@ server <- function(input, output, session) {
     }
     if (!is.null(input$GeneSelection)) {
       metaColgene <- input$GeneSelection
-      exprRange <- round(range(expr[metaColgene,]),2)
+      exprRange <- round(range(expr[metaColgene,], na.rm = T),2)
       expr2 <- as.data.frame(expr)
       expr_g <- expr2[metaColgene,]
       expr_g_t <- as.data.frame(t(expr_g))
@@ -758,7 +1056,7 @@ server <- function(input, output, session) {
     }
     else if (is.null(input$GeneSelection)) {
       metaColgene <- rownames(expr)[1]
-      exprRange <- round(range(expr[metaColgene,]),2)
+      exprRange <- round(range(expr[metaColgene,], na.rm = T),2)
       expr2 <- as.data.frame(expr)
       expr_g <- expr2[metaColgene,]
       expr_g_t <- as.data.frame(t(expr_g))
@@ -767,11 +1065,13 @@ server <- function(input, output, session) {
     }
     
     if (!is.null(input$UMAPannotateSamps2)) {
-      if (input$UMAPannotateSamps2 != " ") {
-        metaColanno2 <- input$UMAPannotateSamps2
-        tdata_fit_df <- merge(tdata_fit_df,meta[,c("SampleName",metaColanno2)], by = "SampleName")
-        if (input$UMAPannoContCheck2 != T) {
-          tdata_fit_df[,metaColanno2] <- as.factor(tdata_fit_df[,metaColanno2])
+      if (input$UMAPannotateSamps1 %in% colnames(meta)) {
+        if (input$UMAPannotateSamps2 != " ") {
+          metaColanno2 <- input$UMAPannotateSamps2
+          tdata_fit_df <- merge(tdata_fit_df,meta[,c("SampleName",metaColanno2)], by = "SampleName")
+          if (metaColanno2 %in% DiscContList_react()$discreteCovs) {
+            tdata_fit_df[,metaColanno2] <- as.factor(tdata_fit_df[,metaColanno2])
+          }
         }
       }
     }
@@ -783,6 +1083,7 @@ server <- function(input, output, session) {
   
   BP_meta_subset <- reactive({
     
+    meta <- meta_react()
     if (!is.null(input$BPsampSubset) && !is.null(input$BPgroupCriteria)) {
       if (input$BPgroupCriteria != " ") {
         sampSubset <- input$BPsampSubset
@@ -811,7 +1112,7 @@ server <- function(input, output, session) {
   output$UMAP_PreC_CoordTable <- DT::renderDataTable({
     
     tdata_fit_df <- UMAP_PreC_CoordTable_react()
-    if (ncol(tdata_fit_df) > 0) {
+    if (ncol(tdata_fit_df) >= 3) {
       umap1 <- input$SelectPreCalc1
       umap2 <- input$SelectPreCalc2
       colnames(tdata_fit_df)[c(2,3)] <- c(umap1,umap2)
@@ -832,6 +1133,7 @@ server <- function(input, output, session) {
   
   output$barplot_table <- DT::renderDataTable({
     
+    #meta <- meta_react()
     if (!is.null(input$BPsampSubset) && !is.null(input$BPgroupCriteria)) {
       if (input$BPgroupCriteria != " ") {
         metaSub <- BP_meta_subset()
@@ -839,6 +1141,7 @@ server <- function(input, output, session) {
         logchoice <- input$log2barplot
         exprSub <- expr[,metaSub[,1]]
         feature <- geneSelected
+        DiscContList <- DiscContList_react()
         
         if (feature %in% rownames(exprSub)) {
           expr_gene <- as.data.frame(t(exprSub[feature,]))
@@ -860,6 +1163,11 @@ server <- function(input, output, session) {
         else if (input$BPsampSubset != "Select All") {
           metaSub <- metaSub[,c(1,3,4,2,5:col_num)]
         }
+        #if (input$ViolinOrBoxP == "Stacked Barplot") {
+        #  if (feature %in% DiscContList$continuousCovs | feature %in% rownames(expr)) {
+        #    metaSub[,feature] <- highlow(as.numeric(metaSub[, which(colnames(metaSub) == feature)]))
+        #  }
+        #}
         #table output,
         DT::datatable(metaSub,
                       options = list(keys = TRUE,
@@ -876,7 +1184,48 @@ server <- function(input, output, session) {
     
   })
   
+  output$GenesInGeneSetTab <- DT::renderDataTable({
+    
+    if (input$AnnoPathway) {
+      if (!is.null(input$ViewGeneSetGenes)) {
+        if (input$ViewGeneSetGenes) {
+          geneset <- GeneSetSelect_react()
+          gs_df <- as.data.frame(geneset)
+          DT::datatable(gs_df, options = list(scrollY = T), rownames = F)
+        }
+      }
+    }
+    
+    
+  })
+  
   ####----Plots----####
+  
+  #SlingShot_react <- reactive({
+  #  
+  #  umap1 <- input$SelectPreCalc1
+  #  umap2 <- input$SelectPreCalc2
+  #  TrajCluster <- input$TrajClustSelect
+  #  TrajClusterStart <- input$TrajClustStart
+  #  if (TrajClusterStart == " ") {
+  #    TrajClusterStart <- NULL
+  #  }
+  #  #sce1 <- sce
+  #  rd_umap <- metaIn[,c("SampleName",umap1,umap2)]
+  #  rownames(rd_umap) <- rd_umap[,1]
+  #  rd_umap <- rd_umap[,-1]
+  #  rd_umap <- as.matrix(rd_umap)
+  #  reducedDims(sce) <- SimpleList(UMAP = rd_umap)
+  #  
+  #  cluster_info <- metaIn[,TrajCluster]
+  #  names(cluster_info) <- metaIn[,1]
+  #  colData(sce)$cluster_info <- cluster_info
+  #  
+  #  sce_umap <- slingshot(sce, clusterLabels = 'cluster_info', reducedDim = 'UMAP', start.clus = TrajClusterStart)
+  #  sce_umap
+  #  
+  #})
+  
   
   SlingShot_react <- reactive({
     
@@ -888,17 +1237,22 @@ server <- function(input, output, session) {
       TrajClusterStart <- NULL
     }
     
-    rd_umap <- meta[,c("SampleName",umap1,umap2)]
+    clusterGT1 <- table(metaIn[,TrajCluster])[which(table(metaIn[,TrajCluster]) > 1)]
+    meta_sub <- metaIn[which(metaIn[,TrajCluster] %in% names(clusterGT1)),]
+    cluster_info <- meta_sub[,TrajCluster]
+    names(cluster_info) <- meta_sub[,1]
+    
+    sce_sub <- sce[,meta_sub$SampleName]
+    
+    rd_umap <- meta_sub[,c("SampleName",umap1,umap2)]
     rownames(rd_umap) <- rd_umap[,1]
     rd_umap <- rd_umap[,-1]
     rd_umap <- as.matrix(rd_umap)
-    reducedDims(sce) <- SimpleList(UMAP = rd_umap)
+    reducedDims(sce_sub) <- SimpleList(UMAP = rd_umap)
     
-    cluster_info <- meta[,TrajCluster]
-    names(cluster_info) <- meta[,1]
-    colData(sce)$cluster_info <- cluster_info
+    colData(sce_sub)$cluster_info <- cluster_info
     
-    sce_umap <- slingshot(sce, clusterLabels = 'cluster_info', reducedDim = 'UMAP', start.clus = TrajClusterStart)
+    sce_umap <- slingshot(sce_sub, clusterLabels = 'cluster_info', reducedDim = 'UMAP', start.clus = TrajClusterStart)
     sce_umap
     
   })
@@ -907,6 +1261,7 @@ server <- function(input, output, session) {
   
   umap_plot_PreC_clin_react_base1 <- reactive({
     
+    #meta <- meta_react()
     ## Variables
     sampSelected <- input$UMAPsampSelect         # Sample Names to annotate
     UMAPtitleText <- input$UMAPtitleTextSize     # Title text size
@@ -936,42 +1291,52 @@ server <- function(input, output, session) {
     }
     
     ## Meta Annotation Plot
-    if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 != " ") {
-      colnames(plot_df)[c(4,5,6)] <- c("AnnoName1","GeneName","AnnoName2")
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2, colour=AnnoName1,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColanno1,":</b> ", AnnoName1,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                "</br> <b>",metaColanno2,":</b> ", AnnoName2,
-                                sep = "")))
-    }
-    if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 == " ") {
-      colnames(plot_df)[c(4,5)] <- c("AnnoName1","GeneName")
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2, colour=AnnoName1,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColanno1,":</b> ", AnnoName1,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                sep = "")))
-    }
-    if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 != " ") {
-      colnames(plot_df)[c(4,5)] <- c("GeneName","AnnoName2")
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                "</br> <b>",metaColanno2,":</b> ", AnnoName2,
-                                sep = "")))
-    }
-    if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 == " ") {
-      colnames(plot_df)[4] <- "GeneName"
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                sep = "")))
-    }
+    #if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 != " ") {
+      if (length(colnames(plot_df)[c(4,5,6)]) == 3) {
+        colnames(plot_df)[c(4,5,6)] <- c("AnnoName1","GeneName","AnnoName2")
+        k <- plot_df %>%
+          ggplot(aes(UMAP1, UMAP2, colour=AnnoName1,
+                     text = paste("</br> <b>Sample Name:</b> ", SampleName,
+                                  "</br> <b>",metaColanno1,":</b> ", AnnoName1,
+                                  "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+                                  "</br> <b>",metaColanno2,":</b> ", AnnoName2,
+                                  sep = "")))
+      }
+    #  colnames(plot_df)[c(4,5,6)] <- c("AnnoName1","GeneName","AnnoName2")
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2, colour=AnnoName1,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColanno1,":</b> ", AnnoName1,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            "</br> <b>",metaColanno2,":</b> ", AnnoName2,
+    #                            sep = "")))
+    #}
+    #if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 == " ") {
+    #  colnames(plot_df)[c(4,5)] <- c("AnnoName1","GeneName")
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2, colour=AnnoName1,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColanno1,":</b> ", AnnoName1,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            sep = "")))
+    #}
+    #if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 != " ") {
+    #  colnames(plot_df)[c(4,5)] <- c("GeneName","AnnoName2")
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            "</br> <b>",metaColanno2,":</b> ", AnnoName2,
+    #                            sep = "")))
+    #}
+    #if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 == " ") {
+    #  colnames(plot_df)[4] <- "GeneName"
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            sep = "")))
+    #}
     
     k <- k + geom_point(shape = 19,
                         size = UMAPdotSize) +
@@ -990,7 +1355,7 @@ server <- function(input, output, session) {
     }
     
     if (input$UMAPannotateSamps1 != " ") {
-      if (input$UMAPannoContCheck1 == T) {
+      if (!metaColanno1 %in% DiscContList_react()$discreteCovs){
         myPalette <- colorRampPalette(rev(brewer.pal(9, input$UMAPcolors)))
         k <- k + scale_colour_gradientn(colours = rev(myPalette(100)))
       }
@@ -1182,7 +1547,7 @@ server <- function(input, output, session) {
     if (LogChoice == TRUE) {
       expr2 <- log2(as.matrix(expr) + 1)
     }
-    exprRange <- round(range(expr2[metaColgene,]),2)
+    exprRange <- round(range(expr2[metaColgene,], na.rm = T),2)
     
     if (!is.null(input$GeneExprRange)) {
       exprMin <- as.numeric(gsub(" ","",strsplit(as.character(input$GeneExprRange),",")[[1]][1]))
@@ -1195,7 +1560,8 @@ server <- function(input, output, session) {
     myPalette <- colorRampPalette(rev(brewer.pal(9, input$UMAPcolors)))
     
     ## Expr Annotation Plot
-    if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 != " ") {
+    #if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 != " ") {
+      if (length(colnames(plot_df)[c(4,5,6)]) == 3) {
       colnames(plot_df)[c(4,5,6)] <- c("AnnoName1","GeneName","AnnoName2")
       k <- plot_df %>%
         ggplot(aes(UMAP1, UMAP2, colour=GeneName,
@@ -1205,32 +1571,32 @@ server <- function(input, output, session) {
                                 "</br> <b>",metaColanno2,":</b> ", AnnoName2,
                                 sep = "")))
     }
-    if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 == " ") {
-      colnames(plot_df)[c(4,5)] <- c("AnnoName1","GeneName")
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2, colour=GeneName,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColanno1,":</b> ", AnnoName1,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                sep = "")))
-    }
-    if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 != " ") {
-      colnames(plot_df)[c(4,5)] <- c("GeneName","AnnoName2")
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2, colour=GeneName,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                "</br> <b>",metaColanno2,":</b> ", AnnoName2,
-                                sep = "")))
-    }
-    if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 == " ") {
-      colnames(plot_df)[4] <- "GeneName"
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2, colour=GeneName,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                sep = "")))
-    }
+    #if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 == " ") {
+    #  colnames(plot_df)[c(4,5)] <- c("AnnoName1","GeneName")
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2, colour=GeneName,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColanno1,":</b> ", AnnoName1,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            sep = "")))
+    #}
+    #if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 != " ") {
+    #  colnames(plot_df)[c(4,5)] <- c("GeneName","AnnoName2")
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2, colour=GeneName,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            "</br> <b>",metaColanno2,":</b> ", AnnoName2,
+    #                            sep = "")))
+    #}
+    #if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 == " ") {
+    #  colnames(plot_df)[4] <- "GeneName"
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2, colour=GeneName,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            sep = "")))
+    #}
     
     k <- k + geom_point(shape = 19,
                         size = UMAPdotSize) +
@@ -1401,7 +1767,8 @@ server <- function(input, output, session) {
     }
     
     ## Meta Annotation Plot
-    if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 != " ") {
+    #if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 != " ") {
+      if (length(colnames(plot_df)[c(4,5,6)]) == 3) {
       colnames(plot_df)[c(4,5,6)] <- c("AnnoName1","GeneName","AnnoName2")
       k <- plot_df %>%
         ggplot(aes(UMAP1, UMAP2, colour=AnnoName2,
@@ -1411,32 +1778,32 @@ server <- function(input, output, session) {
                                 "</br> <b>",metaColanno2,":</b> ", AnnoName2,
                                 sep = "")))
     }
-    if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 == " ") {
-      colnames(plot_df)[c(4,5)] <- c("AnnoName1","GeneName")
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColanno1,":</b> ", AnnoName1,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                sep = "")))
-    }
-    if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 != " ") {
-      colnames(plot_df)[c(4,5)] <- c("GeneName","AnnoName2")
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2, colour=AnnoName2,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                "</br> <b>",metaColanno2,":</b> ", AnnoName2,
-                                sep = "")))
-    }
-    if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 == " ") {
-      colnames(plot_df)[4] <- "GeneName"
-      k <- plot_df %>%
-        ggplot(aes(UMAP1, UMAP2,
-                   text = paste("</br> <b>Sample Name:</b> ", SampleName,
-                                "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
-                                sep = "")))
-    }
+    #if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 == " ") {
+    #  colnames(plot_df)[c(4,5)] <- c("AnnoName1","GeneName")
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColanno1,":</b> ", AnnoName1,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            sep = "")))
+    #}
+    #if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 != " ") {
+    #  colnames(plot_df)[c(4,5)] <- c("GeneName","AnnoName2")
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2, colour=AnnoName2,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            "</br> <b>",metaColanno2,":</b> ", AnnoName2,
+    #                            sep = "")))
+    #}
+    #if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 == " ") {
+    #  colnames(plot_df)[4] <- "GeneName"
+    #  k <- plot_df %>%
+    #    ggplot(aes(UMAP1, UMAP2,
+    #               text = paste("</br> <b>Sample Name:</b> ", SampleName,
+    #                            "</br> <b>",metaColgene," Gene Expression:</b> ", round(GeneName,4),
+    #                            sep = "")))
+    #}
     
     k <- k + geom_point(shape = 19,
                         size = UMAPdotSize) +
@@ -1455,7 +1822,7 @@ server <- function(input, output, session) {
     }
     
     if (input$UMAPannotateSamps2 != " ") {
-      if (input$UMAPannoContCheck2 == T) {
+      if (!metaColanno2 %in% DiscContList_react()$discreteCovs) {
         myPalette <- colorRampPalette(rev(brewer.pal(9, input$UMAPcolors)))
         k <- k + scale_colour_gradientn(colours = rev(myPalette(100)))
       }
@@ -1773,6 +2140,7 @@ server <- function(input, output, session) {
         bar_type <- input$ErrorBP
         dotChoice <- input$Vplotsampledots
         VilOrBP <- input$ViolinOrBoxP
+        DiscContList <- DiscContList_react()
         
         FeatMat <- expr
         metaSub <- BP_meta_subset()
@@ -1813,6 +2181,9 @@ server <- function(input, output, session) {
           colnames(feat_gene2) <- c("SampleName","FeatureName","Type")
           
           if (VilOrBP == "Stacked Barplot") {
+            #if (featSelected %in% DiscContList$continuousCovs | feature %in% rownames(expr)) {
+            #  feat_gene2[,"FeatureName"] <- highlow(as.numeric(feat_gene2[,"FeatureName"]))
+            #}
             feat_gene2[,"FeatureName"] <- as.factor(feat_gene2[,"FeatureName"])
             barp <- ggplot(feat_gene2, aes(fill = FeatureName, x = Type))
             FillChoice <- input$BPfeatFill
@@ -1848,12 +2219,12 @@ server <- function(input, output, session) {
               #feat_gene2[which(feat_gene2[,2] < 0),2] <- 0
               feat_gene2[,2] <- log2(feat_gene2[,2] + 1)
             }
-            se <- function(x) sd(x)/sqrt(length(x))
+            se <- function(x) sd(x, na.rm = T)/sqrt(length(x))
             feat_gene_stats <- feat_gene2 %>%
               group_by(Type) %>%
               summarise_at("FeatureName",list(mean = mean, sd = sd, se = se))
             y_min <- 0
-            y_max <- round(max((feat_gene2[,2]) + 1))
+            y_max <- round(max((feat_gene2[,2]) + 1, na.rm = T))
             if (Vplotylim != "") {
               y_min <- as.numeric(gsub(" ","",strsplit(Vplotylim,",")[[1]][1]))
               y_max <- as.numeric(gsub(" ","",strsplit(Vplotylim,",")[[1]][2]))
@@ -2218,6 +2589,7 @@ server <- function(input, output, session) {
   
   output$EnrichFisherTab <- renderTable({
     
+    meta <- meta_react()
     Feat1 <- input$EnrichFeat1
     Feat2 <- input$EnrichFeat2
     Var1 <- input$EnrichVar1
@@ -2238,6 +2610,7 @@ server <- function(input, output, session) {
   
   Fisher_react <- reactive({
     
+    meta <- meta_react()
     Feat1 <- input$EnrichFeat1
     Feat2 <- input$EnrichFeat2
     Var1 <- input$EnrichVar1
@@ -2271,6 +2644,7 @@ server <- function(input, output, session) {
   
   FisherVenn_react <- reactive({
     
+    meta <- meta_react()
     Feat1 <- input$EnrichFeat1
     Feat2 <- input$EnrichFeat2
     Var1 <- input$EnrichVar1
@@ -2311,47 +2685,11 @@ server <- function(input, output, session) {
     
   })
   
-  #FisherMosaic_react <- reactive({
-  #  
-  #  Feat1 <- input$EnrichFeat1
-  #  Feat2 <- input$EnrichFeat2
-  #  Var1 <- input$EnrichVar1
-  #  Var2 <- input$EnrichVar2
-  #  
-  #  inBoth <- nrow(meta[which(meta[,Feat1] == Var1 & meta[,Feat2] == Var2),])
-  #  inNone <- nrow(meta[which(meta[,Feat1] != Var1 & meta[,Feat2] != Var2),])
-  #  inVar1 <- nrow(meta[which(meta[,Feat1] == Var1 & meta[,Feat2] != Var2),])
-  #  inVar2 <- nrow(meta[which(meta[,Feat1] != Var1 & meta[,Feat2] == Var2),])
-  #  
-  #  metaSub <- meta[,c(Feat1,Feat2)]
-  #  metaSub[which(metaSub[,Feat1] != Var1),Feat1] <- paste0(Feat1," - Not ",Var1)
-  #  metaSub[which(metaSub[,Feat1] == Var1),Feat1] <- paste0(Feat1," - ",Var1)
-  #  metaSub[which(metaSub[,Feat2] != Var2),Feat2] <- paste0(Feat2," - Not ",Var2)
-  #  metaSub[which(metaSub[,Feat2] == Var2),Feat2] <- paste0(Feat2," - ",Var2)
-  #  
-  #  BarP <- ggbarstats(metaSub,seurat_clusters,StudyName,
-  #             results.subtitle = FALSE,
-  #             label = "both",
-  #             package = "ggsci",
-  #             palette = "blue_material") + 
-  #    theme(text = element_text(size = 20),
-  #          plot.subtitle = element_text(size = 14),
-  #          legend.title = element_text(size = 14),
-  #          legend.text = element_text(size = 14),
-  #          axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))
-  #  BarP
-  #  
-  #})
   
-  #output$EnrichMosaicPlot <- renderPlot({
-  #  
-  #  p <- FisherMosaic_react()
-  #  p
-  #  
-  #})
   
   output$EnrichFisherText <- renderUI({
     
+    meta <- meta_react()
     Feat1 <- input$EnrichFeat1
     Feat2 <- input$EnrichFeat2
     Var1 <- input$EnrichVar1
@@ -2377,6 +2715,256 @@ server <- function(input, output, session) {
     
   })
   
+  
+  ####----Heatmap----####
+  
+  AvgExprdf_react <- reactive({
+    
+    sampSubset <- input$HeatSampSubset
+    sampCrit <- input$HeatSampCriteria
+    sampGrouping <- input$HeatGroupCriteria
+    sampGroupCond <- input$HeatGroupSelect
+    GenesSelect <- input$HeatGeneSelect
+    meta <- meta_react()
+
+    meta <- meta[which(meta[,sampGrouping] %in% sampGroupCond),]
+    
+    if (sampSubset != "Select All") {
+      meta <- meta[which(meta[,sampSubset] == sampCrit),]
+      expr <- expr[,meta[,1]]
+    }
+    
+    AvgExprDF <- data.frame(rownames(expr))
+    for (i in unique(meta[,sampGrouping])) {
+      samples <- meta[which(meta[,sampGrouping] == i),1]
+      if (length(samples) <= 1) {
+        AvgExprDF[,paste(sampGrouping,i, sep = "_")] <- expr[,samples]
+      }
+      else if (length(samples) > 1) {
+        AvgExprDF[,paste(sampGrouping,i, sep = "_")] <- rowMeans(expr[,samples])
+        
+      }
+    }
+    rownames(AvgExprDF) <- AvgExprDF[,1]
+    AvgExprDF <- AvgExprDF[,-1]
+    AvgExprDF
+    
+  })
+  
+  AvgExprDotdf_react <- reactive({
+    
+    AvgExprDF <- AvgExprdf_react()
+    GenesSelect <- input$HeatGeneSelect
+    sampSubset <- input$HeatSampSubset
+    sampCrit <- input$HeatSampCriteria
+    sampGrouping <- input$HeatGroupCriteria
+    sampGroupCond <- input$HeatGroupSelect
+    sizeFactor <- input$DotHeatSizeFactor
+    meta <- meta_react()
+    meta <- meta[which(meta[,sampGrouping] %in% sampGroupCond),]
+    if (sampSubset != "Select All") {
+      meta <- meta[which(meta[,sampSubset] == sampCrit),]
+    }
+    
+    AvgExprDF <- AvgExprDF[which(rownames(AvgExprDF) %in% GenesSelect),]
+    AvgExprDF <- AvgExprDF[which(rowSums(AvgExprDF) > 0),]
+    GenesSelect <- rownames(AvgExprDF)
+    
+    AvgExprDF2 <- AvgExprDF
+    AvgExprDF2 <- log2(AvgExprDF2 + 1)
+    zAvgExprDF2 <- apply(AvgExprDF2, 1, scale)
+    zAvgExprDF2 <- apply(zAvgExprDF2, 1, rev)
+    colnames(zAvgExprDF2) <- names(AvgExprDF2)
+    AvgExprDF2 <- as.matrix(zAvgExprDF2)
+    AvgExprDF2[is.na(AvgExprDF2)] <- 0
+    
+    AvgExprDF2 <- as.data.frame(AvgExprDF2)
+    AvgExprDF2$gene <- rownames(AvgExprDF2)
+    AvgExprDF_melt <- melt(AvgExprDF2[GenesSelect,])
+    colnames(AvgExprDF_melt) <- c("gene",sampGrouping,"Expression")
+    
+    TotalCells_PerCluster <- as.data.frame(table(meta[,sampGrouping]))
+    TotalCells_PerCluster[,1] <- paste(sampGrouping,TotalCells_PerCluster[,1], sep = "_")
+    colnames(TotalCells_PerCluster) <- c(sampGrouping,"TotalCells_PerCluster")
+    AvgExprDF_melt2 <- merge(AvgExprDF_melt,TotalCells_PerCluster)
+    
+    cellExpr <- function(vec) {
+      prop <- sum(vec>0)
+      return(prop)
+    }
+    
+    AvgExprDF_melt3 <- AvgExprDF_melt2[1,]
+    AvgExprDF_melt3$TotalClusterCells_Expressed <- NA
+    for (cluster in unique(meta[,sampGrouping])) {
+      AvgExprDF_melt2_sub <- AvgExprDF_melt2[which(AvgExprDF_melt2[,sampGrouping] == paste0(sampGrouping,"_",cluster)),]
+      exprSub <- expr[GenesSelect,meta[which(meta[,sampGrouping] == cluster),1]]
+      TotalClusterCells_Expressed <- as.data.frame(apply(exprSub,1,cellExpr))
+      AvgExprDF_melt2_sub2 <- merge(AvgExprDF_melt2_sub,TotalClusterCells_Expressed, by.x = "gene", by.y = 0)
+      colnames(AvgExprDF_melt2_sub2)[ncol(AvgExprDF_melt2_sub2)] <- "TotalClusterCells_Expressed"
+      AvgExprDF_melt3 <- rbind(AvgExprDF_melt3,AvgExprDF_melt2_sub2)
+      
+    }
+    AvgExprDF_melt3 <- AvgExprDF_melt3[-1,]
+    
+    AvgExprDF_melt3
+    
+  })
+  
+  HeatmapDotAvg_react <- reactive({
+    
+    AvgExprDF_melt3 <- AvgExprDotdf_react()
+    sampGrouping <- input$HeatGroupCriteria
+    sampGroupCond <- input$HeatGroupSelect
+    ClusterMethod <- input$ClusterMethodChoice
+    ClusterColChoice <- input$ClusterCol
+    ClusterRowChoice <- input$ClusterRow
+    GenesSelect <- input$HeatGeneSelect
+    
+    mat <- AvgExprDF_melt3 %>% 
+      select(-TotalCells_PerCluster, -TotalClusterCells_Expressed) %>%  # drop unused columns to faciliate widening
+      pivot_wider(names_from = !!sym(sampGrouping), values_from = Expression) %>% 
+      data.frame() # make df as tibbles -> matrix annoying
+    row.names(mat) <- mat$gene  # put gene in `row`
+    mat <- mat[,-1] #drop gene column as now in rows
+    clust <- hclust(dist(mat %>% as.matrix()), method = ClusterMethod) # hclust with distance matrix
+    v_clust <- hclust(dist(mat %>% as.matrix() %>% t()), method = ClusterMethod) # hclust with distance matrix
+    
+    ddgram_row <- as.dendrogram(clust) # create dendrogram
+    ggtree_plot <- ggtree::ggtree(ddgram_row) +
+      geom_tiplab(align = T, linetype = "solid")
+    ggtree_plot[["data"]][["label"]] <- rep("",length(ggtree_plot[["data"]][["label"]]))
+    
+    ddgram_col <- as.dendrogram(v_clust)
+    ggtree_plot_col <- ggtree(ddgram_col) +
+      layout_dendrogram() +
+      geom_tiplab(align = T, linetype = "solid")
+    ggtree_plot_col[["data"]][["label"]] <- rep("",length(ggtree_plot_col[["data"]][["label"]]))
+    
+    if (ClusterColChoice & ClusterRowChoice) {
+      AvgExprDF_melt4 <- AvgExprDF_melt3 %>%
+        mutate(`% Expressing` = (TotalClusterCells_Expressed/TotalCells_PerCluster) * 100,
+               gene = factor(gene, levels = clust$labels[clust$order]),
+               Grouping = factor(!!sym(sampGrouping), levels = v_clust$labels[v_clust$order]))
+    } else if (ClusterColChoice & !ClusterRowChoice) {
+      AvgExprDF_melt4 <- AvgExprDF_melt3 %>%
+        mutate(`% Expressing` = (TotalClusterCells_Expressed/TotalCells_PerCluster) * 100,
+               Grouping = factor(!!sym(sampGrouping), levels = v_clust$labels[v_clust$order]))
+      AvgExprDF_melt4[,2] <- factor(AvgExprDF_melt4[,2], levels=rev(unique(GenesSelect)))
+    } else if (!ClusterColChoice & ClusterRowChoice) {
+      AvgExprDF_melt4 <- AvgExprDF_melt3 %>%
+        mutate(`% Expressing` = (TotalClusterCells_Expressed/TotalCells_PerCluster) * 100,
+               gene = factor(gene, levels = clust$labels[clust$order]))
+      ClusOrder <- paste0(sampGrouping,"_",sampGroupCond)
+      AvgExprDF_melt4[,1] <- factor(AvgExprDF_melt4[,1], levels=unique(ClusOrder))
+    } else if (!ClusterColChoice & !ClusterRowChoice) {
+      AvgExprDF_melt4 <- AvgExprDF_melt3 %>%
+        mutate(`% Expressing` = (TotalClusterCells_Expressed/TotalCells_PerCluster) * 100)
+      AvgExprDF_melt4[,2] <- factor(AvgExprDF_melt4[,2], levels=rev(unique(GenesSelect)))
+      ClusOrder <- paste0(sampGrouping,"_",sampGroupCond)
+      AvgExprDF_melt4[,1] <- factor(AvgExprDF_melt4[,1], levels=unique(ClusOrder))
+    }
+    dotplot <- AvgExprDF_melt4 %>%
+      ggplot(aes(x=AvgExprDF_melt4[,1], y = gene, color = Expression, size = `% Expressing`)) + 
+      geom_point() +
+      theme_minimal() +
+      scale_colour_gradient2(low = "dark blue", high = "dark red", mid = "white") +
+      theme(axis.text.x = element_text(angle = 90, size = 16),
+            axis.text.y = element_text(size = 14),
+            axis.title.x = element_blank(),
+            axis.title.y = element_blank()) +
+      scale_y_discrete(position = "right")
+    
+    if (ClusterColChoice & ClusterRowChoice) {
+      plot_spacer() + plot_spacer() + ggtree_plot_col +
+        ggtree_plot + plot_spacer() + dotplot + 
+        plot_layout(ncol = 3, widths = c(0.7, -0.1, 4), heights = c(0.9, 4))
+    } else if (ClusterColChoice & !ClusterRowChoice) {
+      plot_spacer() + ggtree_plot_col +
+        plot_spacer() + dotplot + 
+        plot_layout(ncol = 2, widths = c(-0.1, 4), heights = c(0.9, 4))
+    } else if (!ClusterColChoice & ClusterRowChoice) {
+        ggtree_plot + plot_spacer() + dotplot + 
+        plot_layout(ncol = 3, widths = c(0.7, -0.1, 4), heights = c(4))
+    } else if (!ClusterColChoice & !ClusterRowChoice) {
+      dotplot
+    }
+    
+  })
+  
+  HeatmapAvg_react <- reactive({
+    
+    if (length(input$HeatGeneSelect) >= 2) {
+      
+      sampGrouping <- input$HeatGroupCriteria
+      sampGroupCond <- input$HeatGroupSelect
+      ClusterMethod <- input$ClusterMethodChoice
+      ClusterColChoice <- input$ClusterCol
+      ClusterRowChoice <- input$ClusterRow
+      color_choice <- input$ColorPaletteHeat
+      GenesSelect <- input$HeatGeneSelect
+      meta <- meta_react()
+      AvgExprDF <- AvgExprdf_react()
+      
+      AvgExprDF <- AvgExprDF[which(rownames(AvgExprDF) %in% GenesSelect),]
+      AvgExprDF <- AvgExprDF[which(rowSums(AvgExprDF) > 0),]
+      GenesSelect <- rownames(AvgExprDF)
+      
+      dataset <- AvgExprDF
+      dataset <- log2(dataset + 1)
+      zdataset <- apply(dataset, 1, scale)
+      zdataset <- apply(zdataset, 1, rev)
+      colnames(zdataset) <- names(dataset)
+      dataset <- as.matrix(zdataset)
+      dataset[is.na(dataset)] <- 0
+      
+      anno_meta <- data.frame(colnames(AvgExprDF))
+      anno_meta$Type <- gsub("AvgExpr_","",anno_meta[,1])
+      rownames(anno_meta) <- anno_meta[,1]
+      anno_meta <- anno_meta[,-1,drop = F]
+      
+      dataset = dataset[apply(dataset, 1, function(x) !all(x==0)),]
+      minimum = -5;
+      maximum = 5;
+      if (abs(min(dataset)) > abs(max(dataset))) {
+        dataset[dataset < -abs(max(dataset))] = -abs(max(dataset))
+      } else {
+        dataset[dataset > abs(min(dataset))] = abs(min(dataset))
+      }
+      
+      bk = c(seq(minimum,minimum/2, length=100), seq(minimum/2,maximum/2,length=100),seq(maximum/2,maximum,length=100))
+      
+      HeatMap_Colors <- c("dark blue","blue","white","red", "dark red")
+      hmcols <- colorRampPalette(HeatMap_Colors)(length(bk)-1)
+      dataset <- dataset[match(GenesSelect, rownames(dataset)),]
+      ClusOrder <- paste0(sampGrouping,"_",sampGroupCond)
+      dataset <- dataset[,match(ClusOrder, colnames(dataset))]
+      
+      hm <- pheatmap::pheatmap(as.matrix(dataset),
+                               cluster_col = ClusterColChoice,
+                               cluster_row = ClusterRowChoice,
+                               fontsize_row = 12,
+                               fontsize_col = 12,
+                               clustering_method = ClusterMethod,
+                               color=hmcols,
+                               annotation_col = anno_meta,
+                               angle_col = 90,
+                               border_color = NA)
+      
+    }
+    
+    
+  })
+  
+  output$HeatmapAvg <- renderPlot({
+    
+    if (input$DotHeatChoice) {
+      plot <- HeatmapDotAvg_react()
+    } else {
+      plot <- HeatmapAvg_react()
+    }
+    plot
+    
+  })
   
   
   
@@ -2514,6 +3102,5 @@ server <- function(input, output, session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
 
 

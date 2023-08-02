@@ -49,6 +49,9 @@ if (any(installed_packages_BIOC == FALSE)) {
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
+#increase file upload size
+options(shiny.maxRequestSize=5000*1024^2)
+
 ####----Read In Files----####
 
 ##--Meta Data--##

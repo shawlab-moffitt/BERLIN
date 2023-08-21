@@ -31,9 +31,9 @@ GeneSet_CatTab_File <- 'GeneSet_Data/GeneSet_CatTable_v5.zip'
 
 ####----Install and load packages----####
 
-packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","slingshot","cowplot","patchwork",
+packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","cowplot","patchwork",
               "ggdendro","factoextra","dplyr","DT","viridis","readr","tidyverse","ggrepel","ggVennDiagram","ggtree",
-              "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales","SingleCellExperiment")
+              "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales")
 
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
@@ -41,7 +41,7 @@ if (any(installed_packages == FALSE)) {
 }
 invisible(lapply(packages, library, character.only = TRUE))
 #bioconductor packages
-bioCpacks <- c("clusterProfiler","GSVA")
+bioCpacks <- c("clusterProfiler","GSVA","slingshot","SingleCellExperiment")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
 if (any(installed_packages_BIOC == FALSE)) {
   BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)

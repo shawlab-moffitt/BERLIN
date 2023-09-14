@@ -12,7 +12,6 @@ BERLIN was developed with the open-source R programming language (v.4.2.2). The 
 
 ### Input Files 
 The input file should be a raw count matrix of single cells, with each row representing a gene and each column representing a specific cell. The values within the matrix indicate the raw expression counts or read counts of genes in each cell. It is important to ensure that the input file is in a compatible format, such as Comma-Separated Values (CSV), tab-delimited text (TXT), or Tab-Separated Values (TSV), as these formats can be easily read and processed by R and the Seurat package. The package also accepts CellRanger input files: matrix (matrix.mtx), barcode (barcode.tsv), and features (features.tsv). Examples of the input file can be found in https://github.com/shawlab-moffitt/BERLIN/tree/main/2-Single_Cell_RNAseq_Pipeline/Input
-![image](https://github.com/shawlab-moffitt/BERLIN/assets/89986836/a52ea145-0c7d-4454-b274-5ef85a82d41b)
 
 **Parameter file to read in the barcode.tsv, matrix.mtx and genes.tsv from each individual patient**
 ### Single Cell RNA-seq Analysis 

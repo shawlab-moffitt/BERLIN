@@ -1,0 +1,12 @@
+version: '3'
+services:
+  myapp:
+    build:
+      context: .
+      dockerfile: Dockerfile  
+    ports:
+      - "8080:3838"
+    volumes:
+      - ./app:/app  
+    image: drppm_easy_shiny_app:latest
+

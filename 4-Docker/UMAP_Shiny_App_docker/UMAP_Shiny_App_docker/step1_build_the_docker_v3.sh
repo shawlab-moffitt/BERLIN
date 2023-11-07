@@ -1,0 +1,1 @@
+docker build -t umap_shiny_app_v3 .

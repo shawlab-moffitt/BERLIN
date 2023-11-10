@@ -1,0 +1,10 @@
+version: '3'
+services:
+  single-cell-app:
+    image: single_cell_rnaseq_analysis_app:latest
+    container_name: single_cell_rnaseq_analysis_container
+    volumes:
+      - ./app:/app
+    command: ["Rscript", "/app/Single_Cell_RNAseq_Analysis.R"]
+
+

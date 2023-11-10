@@ -18,8 +18,9 @@ h5_file <- "2-Single_Cell_RNAseq_Pipeline/Output/Single_Cell_RNAseq_Output/GSE11
 ## Specify the output folder path
 output_folder <- "2-Single_Cell_RNAseq_Pipeline/Output/Generate_ISCVA_H5_Output"
 
-
-
+if (!dir.exists(output_folder)) {
+  dir.create(output_folder, recursive = TRUE)
+}
 
 ####---- Load Packages ----####
 # Define the list of packages to install

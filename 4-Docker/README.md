@@ -30,7 +30,7 @@ To embark on Building Docker for BERLIN, we encourage you to install Docker Desk
 
 -   Clone the Docker project repository from its source.
 
--   Open Windows command prompt and navigate to the directory containing the Dockerfie.
+-   Open Windows command prompt and navigate to the directory containing the Dockerfie. For example:
 
 ```         
 cd C:\Users\Administrator\Desktop\BERLIN_02\2-Single_Cell_RNAseq_Pipeline_docker\Single_Cell_RNAseq_Pipeline_docker
@@ -58,7 +58,7 @@ cd C:\Users\Administrator\Desktop\BERLIN_02\2-Single_Cell_RNAseq_Pipeline_docker
 
 -   Clone the Docker project repository from its source.
 
--   Open Windows command prompt and navigate to the directory containing the Dockerfie.
+-   Open Windows command prompt and navigate to the directory containing the Dockerfie. For example:
 
 ```         
 cd C:\Users\Administrator\Desktop\BERLIN_02\3-R_Shiny_Viz_Applications_docker\DRPPM_EASY_Shiny_App_docker

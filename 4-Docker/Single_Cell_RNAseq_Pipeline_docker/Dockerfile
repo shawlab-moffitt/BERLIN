@@ -58,8 +58,8 @@ RUN R -e "BiocManager::install(c('SingleR', 'celldex', 'SingleCellExperiment', '
 
 # Copy R script and data files into the container
 COPY app/Single_Cell_RNAseq_Analysis.R /app/
-COPY app/Count_File_Example_GSE116256_AML921A-D0.txt.gz /app/
-COPY app/Meta_File_Example_GSE116256_AML921A-D0.txt.gz /app/
+COPY app/Input/Count_File_Example_GSE116256_AML921A-D0.txt.gz /app/Input/
+COPY app/Input/Meta_File_Example_GSE116256_AML921A-D0.txt.gz /app/Input/
 COPY app/R/write.h5.R /app/R/
 
 # Run R script when the container starts

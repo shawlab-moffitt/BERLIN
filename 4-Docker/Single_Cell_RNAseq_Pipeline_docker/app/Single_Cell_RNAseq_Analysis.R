@@ -11,16 +11,16 @@ Project_Name <- "GSE116256_AMLscRNA"
 
 # Define the path to the count file
 #Count_file <- "2-Single_Cell_RNAseq_Pipeline/Input/Count_File_Example_GSE116256_AML921A-D0.txt.gz"
-Count_file <- "Count_File_Example_GSE116256_AML921A-D0.txt.gz"
+Count_file <- "Input/Count_File_Example_GSE116256_AML921A-D0.txt.gz"
 
 # Define path to clinical/meta data (OPTIONAL)
 #meta_file <- "2-Single_Cell_RNAseq_Pipeline/Input/Meta_File_Example_GSE116256_AML921A-D0.txt.gz"
-meta_file <- "Meta_File_Example_GSE116256_AML921A-D0.txt.gz"
+meta_file <- "Input/Meta_File_Example_GSE116256_AML921A-D0.txt.gz"
 
 
 # Specify the output folder path
 #output_folder <- "2-Single_Cell_RNAseq_Pipeline/Output/Single_Cell_RNAseq_Output/"
-output_folder <- "Single_Cell_RNAseq_Output/"
+output_folder <- "Output/Single_Cell_RNAseq_Output"
 
 seed <- 42
 
@@ -207,11 +207,11 @@ Project_Name <- "GSE116256_AMLscRNA"
 
 ## Seurat H5 file
 #h5_file <- "2-Single_Cell_RNAseq_Pipeline/Output/Single_Cell_RNAseq_Output/GSE116256_AMLscRNA_h5friendly.h5seurat"
-h5_file <- "Single_Cell_RNAseq_Output/GSE116256_AMLscRNA_h5friendly.h5seurat"
-
+h5_file <- "Output/Single_Cell_RNAseq_Output/GSE116256_AMLscRNA_h5friendly.h5seurat"
+     
 ## Specify the output folder path
 #output_folder <- "2-Single_Cell_RNAseq_Pipeline/Output/Single_Cell_PostProcessing_Output/"
-output_folder <- "Single_Cell_PostProcessing_Output/"
+output_folder <- "Output/Single_Cell_PostProcessing_Output/"
 
 ## Optional column to use as marker for differential expression analysis
 Marker_Column <- "CellType"
@@ -460,12 +460,12 @@ Project_Name <- "GSE116256_AMLscRNA"
 
 ## Seurat H5 file
 #h5_file <- "2-Single_Cell_RNAseq_Pipeline/Output/Single_Cell_RNAseq_Output/GSE116256_AMLscRNA_h5friendly.h5seurat"
-h5_file <- "Single_Cell_RNAseq_Output/GSE116256_AMLscRNA_h5friendly.h5seurat"
+h5_file <- "Output/Single_Cell_RNAseq_Output/GSE116256_AMLscRNA_h5friendly.h5seurat"
             
 ## Specify the output folder path
 #output_folder <- "2-Single_Cell_RNAseq_Pipeline/Output/Generate_ISCVA_H5_Output"
 
-output_folder <- "Generate_ISCVA_H5_Output"
+output_folder <- "Output/Generate_ISCVA_H5_Output/"
 
 if (!dir.exists(output_folder)) {
   dir.create(output_folder, recursive = TRUE)

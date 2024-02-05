@@ -18,7 +18,7 @@ BERLIN, an acronym for "Basic Exploration of single-cell RNAseq data and LINeage
 
 3.  **Efficient Environment Setup**: Docker simplifies the setup of complex analysis environments, alleviating researchers from the time-consuming and error-prone task of manual software installation and configuration. With Docker, the entire environment is defined in code, enabling consistent and hassle-free setup.
 
-### **Running the Docker Container Using Docker Desktop**:
+### **Running the Docker Container Using Docker Desktop and Windows cmd**:
 
 To embark on Building Docker for BERLIN, we encourage you to install Docker Desktop on your system. Once you've installed Docker Desktop, you can build the Docker image and run the container with the following simple steps:
 
@@ -30,10 +30,18 @@ To embark on Building Docker for BERLIN, we encourage you to install Docker Desk
 
 -   Clone the Docker project repository from its source.
 
+    Click github.dev
+
+    ![](https://github.com/shawlab-moffitt/BERLIN/blob/main/4-Docker/data/Docker%20Desktop%20images_06.png?raw=true)
+
+-   Download Docker folder as working directory and file path.
+
+    ![](https://github.com/shawlab-moffitt/BERLIN/blob/main/4-Docker/data/Docker%20Desktop%20images_07.png?raw=true)
+
 -   Open Windows command prompt and navigate to the directory containing the Dockerfie. For example:
 
 ```         
-cd C:\Users\Administrator\Desktop\BERLIN_02\2-Single_Cell_RNAseq_Pipeline_docker\Single_Cell_RNAseq_Pipeline_docker
+cd C:\Users\Administrator\Desktop\4-Docker\4-Docker\Single_Cell_RNAseq_Pipeline_docker
 ```
 
 -   Use the `docker build` command to build the Docker image. For example:
@@ -44,11 +52,19 @@ cd C:\Users\Administrator\Desktop\BERLIN_02\2-Single_Cell_RNAseq_Pipeline_docker
 
 **3. Run the Docker Container**:
 
--   Once the Docker image is successfully built, you can run it using Docker Desktop. For example, click on the **'run'** **icon** to start the container, and **all output files** will be generated inside the **'app' folder** of the downloaded repository.
+-   Once the Docker image is successfully built, you can run it using docker-compose in **Windows cmd** and **all output files** will be generated inside the **'app/Output' folder** of the downloaded repository.
 
-    ![](https://github.com/chingyaousf/Introduction-to-Building-Docker-for-BERLIN-Pipeline/blob/main/data/Docker%20Desktop%20images_04.png?raw=true)
+    Check image using
 
-    ![](https://github.com/chingyaousf/Introduction-to-Building-Docker-for-BERLIN-Pipeline/blob/main/data/Docker%20Desktop%20images_05.png?raw=true)
+    ```         
+    docker images
+    ```
+
+    Run container using docker-compose
+
+    ```         
+    docker-compose up
+    ```
 
 #### **Shiny Visualization Applications Docker Setup (3 Containers, One Example Included):**
 
@@ -61,7 +77,7 @@ cd C:\Users\Administrator\Desktop\BERLIN_02\2-Single_Cell_RNAseq_Pipeline_docker
 -   Open Windows command prompt and navigate to the directory containing the Dockerfie. For example:
 
 ```         
-cd C:\Users\Administrator\Desktop\BERLIN_02\3-R_Shiny_Viz_Applications_docker\DRPPM_EASY_Shiny_App_docker
+cd C:\Users\Administrator\Documents\GitHub\BERLIN\4-Docker\DRPPM_EASY_Shiny_App_docker\DRPPM_EASY_Shiny_App_docker
 ```
 
 -   Use the `docker build` command to build the Docker image. For example:
@@ -88,7 +104,7 @@ cd C:\Users\Administrator\Desktop\BERLIN_02\3-R_Shiny_Viz_Applications_docker\DR
 
 -   Use **`docker-compose build`** to build the image based on the YAML file. You can run this command on Windows command prompt whenever the Dockerfile is modified to update the image.
 
--   Use **`docker-compose up`** to run the container based on the built image. This is also used to start the container whenever needed.
+-   Use **`docker-compose up`** to run the container based on the built image. **Use it for run single_cell_rnaseq_analysis_app image to the container in order to produce output files in app/Output**.
 
 -   To remove the container and associated resources, use **`docker-compose down`**.
 

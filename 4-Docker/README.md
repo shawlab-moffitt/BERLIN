@@ -32,11 +32,11 @@ To embark on Building Docker for BERLIN, we encourage you to install Docker Desk
 
     Click github.dev
 
-    ![](https://github.com/shawlab-moffitt/BERLIN/blob/main/4-Docker/data/Docker%20Desktop%20images_06.png?raw=true)
+    ![](https://github.com/chingyaousf/Introduction-to-Building-Docker-for-BERLIN-Pipeline/blob/main/data/Docker%20Desktop%20images_06.png?raw=true)
 
 -   Download Docker folder as working directory and file path.
 
-    ![](https://github.com/shawlab-moffitt/BERLIN/blob/main/4-Docker/data/Docker%20Desktop%20images_07.png?raw=true)
+    ![](https://github.com/chingyaousf/Introduction-to-Building-Docker-for-BERLIN-Pipeline/blob/main/data/Docker%20Desktop%20images_07.png?raw=true)
 
 -   Open Windows command prompt and navigate to the directory containing the Dockerfie. For example:
 
@@ -47,7 +47,7 @@ cd C:\Users\Administrator\Desktop\4-Docker\4-Docker\Single_Cell_RNAseq_Pipeline_
 -   Use the `docker build` command to build the Docker image. For example:
 
 ```         
-   docker build -t single_cell_rnaseq_analysis_app .
+C:\Users\Administrator\Desktop\4-Docker\4-Docker\Single_Cell_RNAseq_Pipeline_dockerdocker> build -t single_cell_rnaseq_analysis_app .
 ```
 
 **3. Run the Docker Container**:
@@ -57,13 +57,13 @@ cd C:\Users\Administrator\Desktop\4-Docker\4-Docker\Single_Cell_RNAseq_Pipeline_
     Check image using
 
     ```         
-    docker images
+    C:\Users\Administrator\Desktop\4-Docker\4-Docker\Single_Cell_RNAseq_Pipeline_dockerdocker> docker images
     ```
 
     Run container using docker-compose
 
     ```         
-    docker-compose up
+    C:\Users\Administrator\Desktop\4-Docker\4-Docker\Single_Cell_RNAseq_Pipeline_dockerdocker> docker-compose up
     ```
 
 #### **Shiny Visualization Applications Docker Setup (3 Containers, One Example Included):**
@@ -83,7 +83,7 @@ cd C:\Users\Administrator\Documents\GitHub\BERLIN\4-Docker\DRPPM_EASY_Shiny_App_
 -   Use the `docker build` command to build the Docker image. For example:
 
 ```         
-   docker build -t drppm_easy_shiny_app .
+C:\Users\Administrator\Documents\GitHub\BERLIN\4-Docker\DRPPM_EASY_Shiny_App_docker\DRPPM_EASY_Shiny_App_dockerdocker> build -t drppm_easy_shiny_app .
 ```
 
 **3. Run the Docker Container**:

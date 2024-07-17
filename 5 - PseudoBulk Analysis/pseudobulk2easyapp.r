@@ -132,9 +132,9 @@ if (file.exists(file)) {
 
 }
 
-seurat_obj@meta.data = seurat_obj@meta.data[which(seurat_obj@meta.data$patient != "NA"),]
-seurat_obj@meta.data = seurat_obj@meta.data[which(seurat_obj@meta.data$cluster != "NA"),]
-seurat_obj@meta.data = seurat_obj@meta.data[which(seurat_obj@meta.data$treatment != "NA"),]
+#seurat_obj@meta.data = seurat_obj@meta.data[which(seurat_obj@meta.data$patient != "NA"),]
+#seurat_obj@meta.data = seurat_obj@meta.data[which(seurat_obj@meta.data$cluster != "NA"),]
+#seurat_obj@meta.data = seurat_obj@meta.data[which(seurat_obj@meta.data$treatment != "NA"),]
 Idents(object=seurat_obj) <- "orig.ident";
 
 SaveH5Seurat(seurat_obj, filename = seurat_unprocessed_h5_path,

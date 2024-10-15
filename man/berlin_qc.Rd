@@ -18,11 +18,6 @@ berlin_qc(
   verbose = TRUE,
   logScale = 10000,
   remove_duplicates = TRUE,
-  resolution = c(0.5, 1, 1.5, 2),
-  pca_npcs = 30,
-  tsne_dims = 1:30,
-  umap_dims = 1:10,
-  neighbor_dims = 1:30,
   doublet_pN = 0.25,
   doublet_pK = 0.09,
   doublet_prop = 0.04,
@@ -56,16 +51,6 @@ berlin_qc(
 
 \item{remove_duplicates}{Boolean. To remove duplicate features that may be found in the data, use TRUE, else FALSE and the function will notify you if duplicate features are found.}
 
-\item{resolution}{Numeric vector. Above one to obtain a larger number of communities, and below one to obtain a smaller number.}
-
-\item{pca_npcs}{Numeric. Total number of principal components to compute for PCA plot. Default is 30.}
-
-\item{tsne_dims}{Numeric sequence. Dimensions to use as input features for TSNE plot. Default 1:30.}
-
-\item{umap_dims}{Numeric sequence. Dimensions to use as input features for UMAP. Default 1:10.}
-
-\item{neighbor_dims}{Numeric sequence. Dimension of reduction to use as input to find neighbors.}
-
 \item{doublet_pN}{Numeric. The number of generated artificial doublets, expressed as a proportion of the merged real-artificial data. Default is set to 0.25.}
 
 \item{doublet_pK}{Numeric. The principal component neighborhood size to compute pANN, expressed as a proportion of the merged real-artificial data. Default is 0.09.}
@@ -75,7 +60,7 @@ berlin_qc(
 \item{doublet_PCs}{Numeric. Number of statistically-significant principal components.}
 }
 \value{
-Seurat object.
+A Seurat object.
 }
 \description{
 Perform quality control and initial formatting of Seurat object

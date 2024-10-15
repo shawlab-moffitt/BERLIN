@@ -222,6 +222,14 @@ berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", 
   object <- Seurat::FindNeighbors(object, reduction = "pca", dims = neighbor_dims, verbose = verbose)
   object <- Seurat::FindClusters(object, resolution = resolution, verbose = verbose)
 
+  # Add UMAP coordinates to the metadata
+  UMAP <- as.data.frame(Embeddings(object = object[["umap"]]))
+  object <- Seurat::AddMetaData(object,metadata = UMAP)
+  # Add tSNE coordinates to the metadata
+  tsne <- as.data.frame(Embeddings(object = object[["tsne"]]))
+  object <- Seurat::AddMetaData(object,metadata = tsne)
+
+
   # Find doublets using DoubletFinder
   if (verbose) {
     message("Finding doublets")

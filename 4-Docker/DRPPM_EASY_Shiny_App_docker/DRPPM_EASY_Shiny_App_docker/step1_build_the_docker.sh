@@ -1,1 +1,0 @@
-docker build -t drppm_easy_shiny_app .

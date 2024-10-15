@@ -1,1 +1,0 @@
-docker build -t pathway_connectivity_shiny_app .

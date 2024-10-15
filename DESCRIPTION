@@ -21,7 +21,6 @@ Imports:
     dplyr,
     Seurat,
     patchwork,
-    DoubletFinder,
     Matrix,
     fields,
     openxlsx,

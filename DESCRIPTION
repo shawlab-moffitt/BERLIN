@@ -27,7 +27,9 @@ Imports:
     SingleR,
     celldex,
     SingleCellExperiment,
-    rhdf5
+    rhdf5,
+    tibble
 remotes:
     mojaveazure/seurat-disk,
-    chris-mcginnis-ucsf/DoubletFinder
+    chris-mcginnis-ucsf/DoubletFinder,
+    immunogenomics/presto

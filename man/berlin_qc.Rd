@@ -18,6 +18,7 @@ berlin_qc(
   verbose = TRUE,
   logScale = 10000,
   remove_duplicates = TRUE,
+  pca_npcs = 30,
   doublet_pN = 0.25,
   doublet_pK = 0.09,
   doublet_prop = 0.04,

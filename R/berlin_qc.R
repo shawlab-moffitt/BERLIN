@@ -129,7 +129,7 @@ berlin_filter <- function(seurat = NULL, species = "human", percent_mt = NULL, m
 #'
 berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", project_name = "BERLIN_Project", species = "human", seed = 42,
                       percent_mt = NULL, minFeatures = 500, varFeatures = 2000, verbose = TRUE, logScale = 10000, remove_duplicates = TRUE,
-                      doublet_pN = 0.25, doublet_pK = 0.09, doublet_prop = 0.04, doublet_PCs = 1:10) {
+                      pca_npcs = 30, doublet_pN = 0.25, doublet_pK = 0.09, doublet_prop = 0.04, doublet_PCs = 1:10) {
 
 
   if (is.null(object) & is.null(counts)) stop("Please supply Seurat object or counts matrix")
@@ -164,7 +164,7 @@ berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", 
     species_detected <- detect_species(rownames(counts))
     # if different than input species, notify user
     if (species_detected != species) {
-      print(paste0("Species detected does not equeale the species argument. Will be treating data as ",species_detected," data."))
+      message(paste0("Species detected does not equeal the species argument. Will be treating data as ",species_detected," data."))
     }
     # Check that gene symbols are not in excel date format
     rownames(counts) <- date_to_gene(rownames(counts), ifelse(species_detected == "mouse",TRUE,FALSE))
@@ -179,7 +179,7 @@ berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", 
     species_detected <- detect_species(Features(object))
     # if different than input species, notify user
     if (species_detected != species) {
-      print(paste0("Species detected does not equeale the species argument. Will be treating data as ",species_detected," data."))
+      message(paste0("Species detected does not equeal the species argument. Will be treating data as ",species_detected," data."))
     }
   }
 
@@ -206,10 +206,12 @@ berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", 
   }
   object <- Seurat::ScaleData(object, vars.to.regress = c("nFeature_RNA", "percent.mt"), verbose = verbose)
 
+
   # Find doublets using DoubletFinder
   if (verbose) {
     message("Finding doublets")
   }
+  object <- Seurat::RunPCA(object, npcs = pca_npcs, verbose = verbose, seed.use = seed)
   nExp <- round(ncol(object) * doublet_prop)  # expect doublet_prop% doublets
   object <- DoubletFinder::doubletFinder(object, pN = doublet_pN, pK = doublet_pK, nExp = nExp, PCs = doublet_PCs)
 

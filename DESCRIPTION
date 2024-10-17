@@ -23,13 +23,17 @@ Imports:
     patchwork,
     Matrix,
     fields,
-    openxlsx,
     SingleR,
     celldex,
     SingleCellExperiment,
     rhdf5,
-    tibble
+    tibble,
+    scGate,
+    UCell
 remotes:
     mojaveazure/seurat-disk,
     chris-mcginnis-ucsf/DoubletFinder,
     immunogenomics/presto
+Depends: 
+    R (>= 2.10)
+LazyData: true

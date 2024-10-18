@@ -13,11 +13,7 @@ berlin_cluster_prep(
   pca_npcs = 30,
   tsne_dims = 1:30,
   umap_dims = 1:10,
-  neighbor_dims = 1:30,
-  doublet_pN = 0.25,
-  doublet_pK = 0.09,
-  doublet_prop = 0.04,
-  doublet_PCs = 1:10
+  neighbor_dims = 1:30
 )
 }
 \arguments{

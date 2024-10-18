@@ -25,8 +25,7 @@
 
 
 berlin_cluster_prep <- function(object = NULL, assay = "RNA", seed = 42, verbose = TRUE, resolution = c(0.5,1,1.5,2),
-                                pca_npcs = 30, tsne_dims = 1:30, umap_dims = 1:10, neighbor_dims = 1:30,
-                                doublet_pN = 0.25, doublet_pK = 0.09, doublet_prop = 0.04, doublet_PCs = 1:10) {
+                                pca_npcs = 30, tsne_dims = 1:30, umap_dims = 1:10, neighbor_dims = 1:30) {
 
 
   if (is.null(object) & is.null(counts)) stop("Please supply Seurat object or counts matrix")

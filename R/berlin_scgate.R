@@ -99,9 +99,9 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
   if (is.data.frame(model) | is.data.frame(model[[1]])) {
     new_meta <- berlin_run_scgate(object = object, model = model, model_name = model_name, assay = assay, ncores = ncores, seed = seed, verbose = verbose)
   } else {
-    model_names <- names(model)
-    new_metas <- sapply(model_names[1:3], function(m) {
-      model_in <- model[[m]]
+    model_names <- names(models)
+    new_metas <- sapply(model_names, function(m) {
+      model_in <- models[[m]]
       new_meta <- berlin_run_scgate(object = object, model = model_in, model_name = m, assay = assay, ncores = ncores, seed = seed, verbose = verbose)
       new_meta <- cbind(barcode = rownames(new_meta),new_meta)
       new_meta

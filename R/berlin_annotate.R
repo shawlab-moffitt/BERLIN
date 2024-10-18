@@ -76,13 +76,5 @@ berlin_annotate <- function(object = NULL, verbose = TRUE) {
   object@meta.data$blue.main <- blue.main$pruned.labels
   object@meta.data$blue.fine <- blue.fine$pruned.labels
 
-
-
-
-
-
-
-
-
   return(object)
 }

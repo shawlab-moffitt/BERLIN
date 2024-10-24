@@ -1,5 +1,74 @@
 
 
+
+#' Generate scGate model from parameter data
+#'
+#' @param params A data.frame. The scGate model will be generated based on these parameters. More information about the format in details.
+#'
+#' @return A R List Object.
+#' @export
+#'
+#' @details
+#' The first column should indicate the cell type label. The following columns should be named to indicate the level and positive or negative indication of the signature.
+#' The level should be a numeric number starting at 1 and the positive and negative indication will be determined by grepping the column name for 'pos' or 'neg'.
+#' For example the column name 'Level2Pos' indicated a column of level 2 positive indication signatures. The user does not need to include the word 'level' and
+#' can write out the word of 'positive' or 'negative' and put the level number after the indicator if preferred.
+#'
+#'
+
+
+
+berlin_scgate_model <- function(params = NULL) {
+  if (is.null(params)) stop("Please supply scGate model parameters")
+  posneg_cols <- grep("pos|neg",colnames(params), ignore.case = T)
+  if (length(posneg_cols) == 0) stop("Positive/Negative indicators not found in column names")
+  leveln_cols <- grep("[0-9]",colnames(model_params))
+  if (length(leveln_cols) == 0) stop("Level indicators not found in column names")
+
+  data(list = paste0("scGate_Signatures"), package = "BERLIN")
+  assign("scGate_Signatures",get(paste0("scGate_Signatures")))
+
+  model_list <- lapply(seq_along(params[,1]), function(x) {
+
+    # Get cell type
+    cell_type <- params[x,1]
+
+    # Apply function on each level/pos/neg
+    temp_mod <- do.call("rbind",sapply(colnames(params)[-1], function(y) {
+      leveln <- paste0("level",gsub("\\D+", "", y))
+      posneg <- ifelse(grepl("pos",y,ignore.case = T),"positive","negative")
+      sig_name <- strsplit(gsub(" ","",params[x,y]),",")[[1]]
+
+      # Apply function on each signature name (sig_name)
+      # Output is 4 values to make row of df
+      rowz <- do.call("rbind",sapply(sig_name, function(z) {
+        genes <- paste0(scGate_Signatures[which(scGate_Signatures[,1] == z),2], collapse = ";")
+        rowmade <- c(leveln,posneg,z,genes)
+        return(as.data.frame(rowmade))
+
+      }))
+
+    }))
+
+    # Clean cell type model data frame
+    temp_mod <- as.data.frame(temp_mod)
+    colnames(temp_mod) <- c("levels","use_as","name","signature")
+    rownames(temp_mod) <- NULL
+    temp_mod[temp_mod==""] <- NA
+    temp_mod <- temp_mod[complete.cases(temp_mod),]
+    return(temp_mod)
+
+  })
+  names(model_list) <- model_params[,1]
+  return(model_list)
+}
+
+
+
+
+
+
+
 #' Performs ScGate function with a single model on a Seurat object
 #'
 #' @param object Seurat object. If NULL, must supply count data.
@@ -15,11 +84,11 @@
 #'
 
 
-berlin_run_scgate <- function(object = NULL, model = NULL, model_name = NULL, assay = "RNA", ncores = 1, seed = 42, verbose = TRUE) {
+berlin_run_scgate <- function(object = NULL, model = NULL, model_name = NULL, assay = "RNA", pos.thr = 0.2, neg.thr = 0.2, ncores = 1, seed = 42, verbose = TRUE) {
   if (is.null(object)) stop("Please supply Seurat object")
   if (is.null(model)) stop("Please supply ScGate model")
   if (is.data.frame(model)) {
-    if (colnames(model) != c("levels","use_as","name","signature")) stop("Please check model format.\nMust follow column names: levels, use_as, name, signature.")
+    if (all(colnames(model) != c("levels","use_as","name","signature"))) stop("Please check model format.\nMust follow column names: levels, use_as, name, signature.")
   }
   if (is.data.frame(model) | is.data.frame(model[[1]])) {
     if (is.null(model_name)) stop("Please provide model name.")
@@ -27,7 +96,7 @@ berlin_run_scgate <- function(object = NULL, model = NULL, model_name = NULL, as
 
   original_meta_col_n <- ncol(object[[]])
 
-  object_scgate <- scGate::scGate(object, model, assay = assay, ncores = ncores, seed = seed, verbose = verbose)
+  object_scgate <- scGate::scGate(object, model, assay = assay, pos.thr = pos.thr, neg.thr = neg.thr, ncores = ncores, seed = seed, verbose = verbose)
 
   meta <- object_scgate[[]]
   new_meta_cols_n <- ncol(meta)
@@ -73,7 +142,8 @@ berlin_run_scgate <- function(object = NULL, model = NULL, model_name = NULL, as
 #'
 
 
-berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name = NULL, species = "human", ncores = 1, seed = 42, verbose = TRUE) {
+berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name = NULL, pos.thr = 0.2, neg.thr = 0.2,
+                          species = "human", ncores = 1, seed = 42, verbose = TRUE) {
 
   if (is.null(object)) stop("Please supply Seurat object")
 
@@ -88,7 +158,7 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
     models <- scGate_models_DB[[species_detected]]
   } else {
     if (is.data.frame(model)) {
-      if (colnames(model) != c("levels","use_as","name","signature")) stop("Please check model format.\nMust follow column names: levels, use_as, name, signature.")
+      if (all(colnames(model) != c("levels","use_as","name","signature"))) stop("Please check model format.\nMust follow column names: levels, use_as, name, signature.")
     }
     if (is.data.frame(model) | is.data.frame(model[[1]])) {
       if (is.null(model_name)) stop("Please provide model name.")
@@ -118,3 +188,55 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
   return(object)
 
 }
+
+
+#' Summarize scGate annotation across clusters
+#'
+#' @param object Seurat object. If NULL, must supply count data.
+#' @param celltype_col String. Name of column containing predicted cell type names. If not supplied it will be predicted based on string matching.
+#' @param cluster_col String. Name of column containing cluster information.
+#'
+#' @return A data.frame object.
+#' @export
+#'
+
+
+
+berlin_scgate_summarize <- function(object = NULL, celltype_col = NULL, cluster_col = "seurat_clusters") {
+
+  if (is.null(object)) stop("Please supply Seurat object")
+
+  meta <- object[[]]
+  if (is.null(celltype_col)) {
+    celltype_col <- grep("^scGate_.*\\_Celltype$", colnames(meta), value = T)
+    if (length(celltype_col) == 1) {
+      message(paste0("'celltype_col' argument is NULL\nWill use identified possible cell type column '",celltype_col,"'"))
+    } else {
+      stop(paste0("'celltype_col' argument is NULL\nCannot indentify cell type column\nPlease provide"))
+    }
+  }
+
+  if (is.null(cluster_col)) stop("Please supply cluster column name")
+
+  cluster_celltype_df <- data.frame(
+    cluster = meta[,cluster_col],
+    cell_type = meta[,celltype_col]
+  )
+  # Rename the cell_type column if it's not named correctly
+  colnames(cluster_celltype_df)[2] <- "cell_type"
+  # Convert NA values to a string so they are treated as a category
+  cluster_celltype_df$cell_type <- ifelse(is.na(cluster_celltype_df$cell_type), "NA", cluster_celltype_df$cell_type)
+  # Generate a table of cluster vs cell type counts
+  cluster_celltype_count <- table(cluster_celltype_df$cluster, cluster_celltype_df$cell_type)
+  # Convert counts to percentages
+  cluster_celltype_percentage <- prop.table(cluster_celltype_count, margin = 1) * 100
+  # Convert to df for easier viewing
+  cluster_celltype_df <- as.data.frame(cluster_celltype_percentage)
+  colnames(cluster_celltype_df) <- c('cluster', 'cell_type', 'percentage')
+  # Reshape for easy viewing
+  cluster_celltype_df_reshape <- reshape2::dcast(cluster_celltype_df, cell_type ~ cluster, value.var = "percentage")
+  colnames(cluster_celltype_df_reshape)[-1] <- paste0("Percent_Celltype_Cluster",colnames(cluster_celltype_df_reshape)[-1])
+  return(cluster_celltype_df_reshape)
+
+}
+

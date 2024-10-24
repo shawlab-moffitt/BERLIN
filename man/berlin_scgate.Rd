@@ -9,6 +9,8 @@ berlin_scgate(
   assay = "RNA",
   model = NULL,
   model_name = NULL,
+  pos.thr = 0.2,
+  neg.thr = 0.2,
   species = "human",
   ncores = 1,
   seed = 42,

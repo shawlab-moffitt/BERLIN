@@ -14,7 +14,7 @@ berlin_sctype(
 )
 }
 \arguments{
-\item{object}{Seurat object. If NULL, must supply count data.}
+\item{object}{Seurat object.}
 
 \item{scaled}{Boolean. TRUE if the data has already been scaled. If the data still needs to be scaled, FALSE and the function will scale the data.}
 

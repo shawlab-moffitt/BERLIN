@@ -23,7 +23,7 @@ ScType_genesets <- function() {
 
 #' Generate ScType encrichment score matrix from Seurat object
 #'
-#' @param object Seurat object. If NULL, must supply count data.
+#' @param object Seurat object.
 #' @param scaled Boolean. TRUE if the data has already been scaled. If the data still needs to be scaled, FALSE and the function will scale the data.
 #' @param geneset String. Input a tissue geneset name from the provided in the package (see details). Run ScType_genesets() function to view available genesets.
 #' @param pos_geneset List object. A list of positive marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.

@@ -25,6 +25,7 @@ Imports:
     tibble,
     reshape2,
     Seurat,
+    SeuratObject,
     scGate
 biocViews:
     scGate,

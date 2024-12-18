@@ -196,7 +196,7 @@ berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", 
   if (verbose) {
     message("Cell Cycle Scoring")
   }
-  object <- Seurat::CellCycleScoring(object = object, g2m.features = cc.genes$g2m.genes, s.features = cc.genes$s.genes, verbose = verbose)
+  object <- Seurat::CellCycleScoring(object = object, g2m.features = Seurat::cc.genes$g2m.genes, s.features = Seurat::cc.genes$s.genes, verbose = verbose)
   if (verbose) {
     message("Finding most variable features")
   }

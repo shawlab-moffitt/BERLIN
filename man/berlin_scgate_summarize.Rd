@@ -7,7 +7,8 @@
 berlin_scgate_summarize(
   object = NULL,
   celltype_col = NULL,
-  cluster_col = "seurat_clusters"
+  cluster_col = "seurat_clusters",
+  show_unassigned = FALSE
 )
 }
 \arguments{

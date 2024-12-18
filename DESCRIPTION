@@ -19,18 +19,21 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
     dplyr,
-    Seurat,
     patchwork,
     Matrix,
     fields,
+    tibble,
+    reshape2,
+    Seurat,
+    scGate
+biocViews:
+    scGate,
+    UCell,
     SingleR,
     celldex,
     SingleCellExperiment,
-    rhdf5,
-    tibble,
-    scGate,
-    UCell,
-    reshape2
+    BiocParallel,
+    rhdf5
 remotes:
     mojaveazure/seurat-disk,
     chris-mcginnis-ucsf/DoubletFinder,

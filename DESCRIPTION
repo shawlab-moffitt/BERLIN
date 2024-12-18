@@ -44,6 +44,14 @@ Imports:
     SingleCellExperiment,
     BiocParallel,
     rhdf5
+biocViews:
+    scGate,
+    UCell,
+    SingleR,
+    celldex,
+    SingleCellExperiment,
+    BiocParallel,
+    rhdf5
 Depends: 
     R (>= 2.10)
 LazyData: true

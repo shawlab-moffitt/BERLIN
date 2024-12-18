@@ -6,6 +6,12 @@ The utilization of single-cell RNA sequencing (scRNA-seq) has emerged as a robus
 
 
 ## Installation 
+
+### Package
+
+`install.packages("devtools")
+devtools::install_github("shawlab-moffitt/BERLIN")`
+
 ### R dependencies 
 BERLIN was developed with the open-source R programming language (v.4.2.2). The workflow leverages single cell RNAseq R packages that aid in clustering, cell annotation, and data manipulation. The single cell analysis is performed with Seurat (v.4.3.0) and Seurat helper packages, such as SeuratDisk (v.0.0.0.9020), and SingleCellExperiment (v.1.28.0). Cell annotation was performed with the R packages celldex (v.1.8.0), DoubletFinder (v.2.0.3), and SingleR (v.2.0.0) and for data cleaning and manipulation dplyr (v.1.1.2) and tibble (v.3.2.1) were used. The results of the BERLIN workflow can be visualized in the DRPPM-EASY (ExprAnalysisShinY), Shiny-UMAP, and PATH-SURVEYOR Pathway Connectivity applications that are compatible with R (v.4.2.2). There are package installation scripts for the BERLIN workflow and R Shiny applications through the GitHub page.
 

@@ -28,7 +28,6 @@ Imports:
     reshape2,
     Seurat,
     SeuratObject,
-    BiocManager,
     scGate,
     DoubletFinder,
     presto,

@@ -42,7 +42,8 @@ Imports:
 Remotes:
     mojaveazure/seurat-disk,
     chris-mcginnis-ucsf/DoubletFinder,
-    immunogenomics/presto
+    immunogenomics/presto,
+    LTLA/celldex
 Depends: 
     R (>= 2.10)
 LazyData: true

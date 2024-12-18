@@ -19,6 +19,11 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Additional_repositories:
     https://bioconductor.org/packages/release/bioc
+Remotes:
+    mojaveazure/seurat-disk,
+    chris-mcginnis-ucsf/DoubletFinder,
+    immunogenomics/presto,
+    LTLA/celldex
 Imports:
     dplyr,
     patchwork,
@@ -39,11 +44,6 @@ Imports:
     SingleCellExperiment,
     BiocParallel,
     rhdf5
-Remotes:
-    mojaveazure/seurat-disk,
-    chris-mcginnis-ucsf/DoubletFinder,
-    immunogenomics/presto,
-    LTLA/celldex
 Depends: 
     R (>= 2.10)
 LazyData: true

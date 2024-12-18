@@ -29,7 +29,13 @@ Imports:
     scGate,
     DoubletFinder,
     presto,
-    SeuratDisk
+    SeuratDisk,
+    UCell,
+    SingleR,
+    celldex,
+    SingleCellExperiment,
+    BiocParallel,
+    rhdf5
 biocViews:
     scGate,
     UCell,

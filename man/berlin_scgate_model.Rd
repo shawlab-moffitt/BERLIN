@@ -4,10 +4,12 @@
 \alias{berlin_scgate_model}
 \title{Generate scGate model from parameter data}
 \usage{
-berlin_scgate_model(params = NULL)
+berlin_scgate_model(params = NULL, signatures = NULL)
 }
 \arguments{
 \item{params}{A data.frame. The scGate model will be generated based on these parameters. More information about the format in details.}
+
+\item{signatures}{A two column data frame. First column of signature names and second column of signature featurs/genes.}
 }
 \value{
 A R List Object.

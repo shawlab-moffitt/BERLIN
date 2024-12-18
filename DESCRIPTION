@@ -35,7 +35,7 @@ biocViews:
     SingleCellExperiment,
     BiocParallel,
     rhdf5
-remotes:
+Remotes:
     mojaveazure/seurat-disk,
     chris-mcginnis-ucsf/DoubletFinder,
     immunogenomics/presto

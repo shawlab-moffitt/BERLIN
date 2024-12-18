@@ -22,9 +22,9 @@ berlin_sctype(
 
 \item{pos_geneset}{List object. A list of positive marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.}
 
-\item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
+\item{neg_geneset}{List object. A list of negative marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.}
 
-\item{neg_genesetList}{object. A list of negative marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.}
+\item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
 }
 \value{
 Matrix

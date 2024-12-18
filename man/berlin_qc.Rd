@@ -52,6 +52,8 @@ berlin_qc(
 
 \item{remove_duplicates}{Boolean. To remove duplicate features that may be found in the data, use TRUE, else FALSE and the function will notify you if duplicate features are found.}
 
+\item{pca_npcs}{Numeric. Total number of principal components to compute for PCA plot. Default is 30.}
+
 \item{doublet_pN}{Numeric. The number of generated artificial doublets, expressed as a proportion of the merged real-artificial data. Default is set to 0.25.}
 
 \item{doublet_pK}{Numeric. The principal component neighborhood size to compute pANN, expressed as a proportion of the merged real-artificial data. Default is 0.09.}

@@ -26,6 +26,10 @@ berlin_scgate(
 
 \item{model_name}{String. A desired name for the input model. Required if only running a single model.}
 
+\item{pos.thr}{Numeric. Minimum UCell score value for positive signatures.}
+
+\item{neg.thr}{Numeric. Maximum UCell score value for negative signatures.}
+
 \item{species}{String. Denoting if the data is from "human" or "mouse". Required if using package provided models.}
 
 \item{ncores}{Numeric. Number of processors for parallel processing. Default to 1.}

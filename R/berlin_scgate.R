@@ -27,8 +27,8 @@ berlin_scgate_model <- function(params = NULL, signatures = NULL) {
   if (length(leveln_cols) == 0) stop("Level indicators not found in column names")
 
   if (is.null(signatures)) {
-    data(list = paste0("scGate_Signatures"), package = "BERLIN")
-    assign("scGate_Signatures",get(paste0("scGate_Models_Geneset")))
+    utils::data(list = paste0("scGate_Signatures"), package = "BERLIN")
+    base::assign("scGate_Signatures",get(paste0("scGate_Models_Geneset")))
   }
 
   model_list <- lapply(seq_along(params[,1]), function(x) {
@@ -58,7 +58,7 @@ berlin_scgate_model <- function(params = NULL, signatures = NULL) {
     colnames(temp_mod) <- c("levels","use_as","name","signature")
     rownames(temp_mod) <- NULL
     temp_mod[temp_mod==""] <- NA
-    temp_mod <- temp_mod[complete.cases(temp_mod),]
+    temp_mod <- temp_mod[stats::complete.cases(temp_mod),]
     return(temp_mod)
 
   })
@@ -81,6 +81,8 @@ berlin_scgate_model <- function(params = NULL, signatures = NULL) {
 #' @param ncores Numeric. Number of processors for parallel processing. Default to 1.
 #' @param seed Numeric. Random seed, default is 42. Setting to NULL will remove seed.
 #' @param verbose Boolean. To show progress, TRUE, else FALSE.
+#' @param pos.thr Numeric. Minimum UCell score value for positive signatures.
+#' @param neg.thr Numeric. Maximum UCell score value for negative signatures.
 #'
 #' @return A data.frame.
 #' @export
@@ -137,6 +139,8 @@ berlin_run_scgate <- function(object = NULL, model = NULL, model_name = NULL, as
 #' @param ncores Numeric. Number of processors for parallel processing. Default to 1.
 #' @param seed Numeric. Random seed, default is 42. Setting to NULL will remove seed.
 #' @param verbose Boolean. To show progress, TRUE, else FALSE.
+#' @param pos.thr Numeric. Minimum UCell score value for positive signatures.
+#' @param neg.thr Numeric. Maximum UCell score value for negative signatures.
 #'
 #' @return Seurat object.
 #' @export
@@ -195,6 +199,7 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
 #' @param object Seurat object. If NULL, must supply count data.
 #' @param celltype_col String. Name of column containing predicted cell type names. If not supplied it will be predicted based on string matching.
 #' @param cluster_col String. Name of column containing cluster information.
+#' @param show_unassigned Boolean. If TRUE, unassigned or NA cell types will be included.
 #'
 #' @return A data.frame object.
 #' @export
@@ -202,7 +207,7 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
 
 
 
-berlin_scgate_summarize <- function(object = NULL, celltype_col = NULL, cluster_col = "seurat_clusters", show_unassigned = FALSE) {
+berlin_scgate_summarize <- function(object = NULL, celltype_col = NULL, cluster_col = "seurat_clusters", show_unassigned = TRUE) {
 
   if (is.null(object)) stop("Please supply Seurat object")
 
@@ -236,13 +241,13 @@ berlin_scgate_summarize <- function(object = NULL, celltype_col = NULL, cluster_
     # Reshape for easy viewing
     cluster_celltype_df_reshape <- reshape2::dcast(cluster_celltype_df, cell_type ~ cluster, value.var = "percentage")
     colnames(cluster_celltype_df_reshape)[-1] <- paste0("Percent_Celltype_",cluster_col,"_",colnames(cluster_celltype_df_reshape)[-1])
-    if (show_unassigned) {
+    if (!show_unassigned) {
       cluster_celltype_df_reshape <- cluster_celltype_df_reshape[which(cluster_celltype_df_reshape[,1] != "Unassigned/NA"),]
     }
     cluster_celltype_df_reshape <- cbind(data.frame(Model = rep(c,nrow(cluster_celltype_df_reshape)),
                                                     cluster_celltype_df_reshape))
   })
-  cluster_celltype_df_reshape_out <- rbindlist(cluster_celltype_df_reshape_list,fill = T)
+  cluster_celltype_df_reshape_out <- data.table::rbindlist(cluster_celltype_df_reshape_list,fill = T)
 
   return(cluster_celltype_df_reshape_out)
 

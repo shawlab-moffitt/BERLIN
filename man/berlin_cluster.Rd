@@ -34,14 +34,6 @@ berlin_cluster(
 \item{umap_dims}{Numeric sequence. Dimensions to use as input features for UMAP. Default 1:10.}
 
 \item{neighbor_dims}{Numeric sequence. Dimension of reduction to use as input to find neighbors.}
-
-\item{doublet_pN}{Numeric. The number of generated artificial doublets, expressed as a proportion of the merged real-artificial data. Default is set to 0.25.}
-
-\item{doublet_pK}{Numeric. The principal component neighborhood size to compute pANN, expressed as a proportion of the merged real-artificial data. Default is 0.09.}
-
-\item{doublet_prop}{Numeric. Estimated proportion of homotypic doublets. Default is 0.04.}
-
-\item{doublet_PCs}{Numeric. Number of statistically-significant principal components.}
 }
 \value{
 A Seurat object.

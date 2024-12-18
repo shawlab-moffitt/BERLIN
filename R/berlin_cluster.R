@@ -13,10 +13,6 @@
 #' @param tsne_dims Numeric sequence. Dimensions to use as input features for TSNE plot. Default 1:30.
 #' @param umap_dims  Numeric sequence. Dimensions to use as input features for UMAP. Default 1:10.
 #' @param neighbor_dims Numeric sequence. Dimension of reduction to use as input to find neighbors.
-#' @param doublet_pN Numeric. The number of generated artificial doublets, expressed as a proportion of the merged real-artificial data. Default is set to 0.25.
-#' @param doublet_pK Numeric. The principal component neighborhood size to compute pANN, expressed as a proportion of the merged real-artificial data. Default is 0.09.
-#' @param doublet_prop Numeric. Estimated proportion of homotypic doublets. Default is 0.04.
-#' @param doublet_PCs Numeric. Number of statistically-significant principal components.
 #'
 #' @return A Seurat object.
 #' @export
@@ -40,10 +36,10 @@ berlin_cluster <- function(object = NULL, assay = "RNA", seed = 42, verbose = TR
   object <- Seurat::FindClusters(object, resolution = resolution, verbose = verbose)
 
   # Add UMAP coordinates to the metadata
-  UMAP <- as.data.frame(Embeddings(object = object[["umap"]]))
+  UMAP <- as.data.frame(SeuratObject::Embeddings(object = object[["umap"]]))
   object <- Seurat::AddMetaData(object,metadata = UMAP)
   # Add tSNE coordinates to the metadata
-  tsne <- as.data.frame(Embeddings(object = object[["tsne"]]))
+  tsne <- as.data.frame(SeuratObject::Embeddings(object = object[["tsne"]]))
   object <- Seurat::AddMetaData(object,metadata = tsne)
 
   return(object)

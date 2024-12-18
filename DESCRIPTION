@@ -26,32 +26,34 @@ Remotes:
     LTLA/celldex
 Imports:
     dplyr,
-    patchwork,
-    Matrix,
-    fields,
     tibble,
     reshape2,
+    data.table,
+    scales,
     Seurat,
     SeuratObject,
-    BiocManager,
     scGate,
     DoubletFinder,
-    presto,
-    SeuratDisk,
-    UCell,
     SingleR,
     celldex,
-    SingleCellExperiment,
+    UCell,
+    rhdf5,
     BiocParallel,
-    rhdf5
+    Matrix,
+    presto,
+    fields,
+    patchwork,
+    BiocManager,
+    SingleCellExperiment
 biocViews:
     scGate,
     UCell,
     SingleR,
     celldex,
     SingleCellExperiment,
+    SeuratDisk,
     BiocParallel,
     rhdf5
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
 LazyData: true

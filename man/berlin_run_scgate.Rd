@@ -25,6 +25,10 @@ berlin_run_scgate(
 
 \item{assay}{String. Name of the initial/default assay. Default to RNA.}
 
+\item{pos.thr}{Numeric. Minimum UCell score value for positive signatures.}
+
+\item{neg.thr}{Numeric. Maximum UCell score value for negative signatures.}
+
 \item{ncores}{Numeric. Number of processors for parallel processing. Default to 1.}
 
 \item{seed}{Numeric. Random seed, default is 42. Setting to NULL will remove seed.}

@@ -6,6 +6,11 @@
 #' @return A Seurat object.
 #' @export
 #'
+#' @importFrom stats complete.cases
+#' @importFrom utils data
+#' @importFrom utils setTxtProgressBar
+#' @importFrom utils txtProgressBar
+#'
 berlin_annotate <- function(object = NULL, verbose = TRUE) {
 
   if (is.null(object)) stop("Please supply Seurat object as input.")
@@ -28,28 +33,28 @@ berlin_annotate <- function(object = NULL, verbose = TRUE) {
 
   # Auto-annotating cell types using reference databases from celldex
   if (verbose) {
-    message("Auto-annotating cell types using reference databases from celldex")
-    pb = txtProgressBar(min = 0, max = 10, initial = 0, style = 3)
+    base::message("Auto-annotating cell types using reference databases from celldex")
+    pb = utils::txtProgressBar(min = 0, max = 10, initial = 0, style = 3)
     hpca.main <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = hpca.ref, labels = hpca.ref$label.main)
-    setTxtProgressBar(pb,1)
+    utils::setTxtProgressBar(pb,1)
     hpca.fine <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = hpca.ref, labels = hpca.ref$label.fine)
-    setTxtProgressBar(pb,2)
+    utils::setTxtProgressBar(pb,2)
     dice.main <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = dice.ref, labels = dice.ref$label.main)
-    setTxtProgressBar(pb,3)
+    utils::setTxtProgressBar(pb,3)
     dice.fine <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = dice.ref, labels = dice.ref$label.fine)
-    setTxtProgressBar(pb,4)
+    utils::setTxtProgressBar(pb,4)
     blue.main <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = blueprint.ref, labels = blueprint.ref$label.main)
-    setTxtProgressBar(pb,5)
+    utils::setTxtProgressBar(pb,5)
     blue.fine <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = blueprint.ref, labels = blueprint.ref$label.fine)
-    setTxtProgressBar(pb,6)
+    utils::setTxtProgressBar(pb,6)
     monaco.main <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = monaco.ref, labels = monaco.ref$label.main)
-    setTxtProgressBar(pb,7)
+    utils::setTxtProgressBar(pb,7)
     monaco.fine <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = monaco.ref, labels = monaco.ref$label.fine)
-    setTxtProgressBar(pb,8)
+    utils::setTxtProgressBar(pb,8)
     northern.main <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = northern.ref, labels = northern.ref$label.main)
-    setTxtProgressBar(pb,9)
+    utils::setTxtProgressBar(pb,9)
     northern.fine <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = northern.ref, labels = northern.ref$label.fine)
-    setTxtProgressBar(pb,10)
+    utils::setTxtProgressBar(pb,10)
     close(pb)
   } else {
     hpca.main <- SingleR::SingleR(test = sce, assay.type.test = 1, ref = hpca.ref, labels = hpca.ref$label.main)

@@ -8,7 +8,7 @@ berlin_scgate_summarize(
   object = NULL,
   celltype_col = NULL,
   cluster_col = "seurat_clusters",
-  show_unassigned = FALSE
+  show_unassigned = TRUE
 )
 }
 \arguments{
@@ -17,6 +17,8 @@ berlin_scgate_summarize(
 \item{celltype_col}{String. Name of column containing predicted cell type names. If not supplied it will be predicted based on string matching.}
 
 \item{cluster_col}{String. Name of column containing cluster information.}
+
+\item{show_unassigned}{Boolean. If TRUE, unassigned or NA cell types will be included.}
 }
 \value{
 A data.frame object.

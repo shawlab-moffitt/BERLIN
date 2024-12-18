@@ -118,6 +118,7 @@ berlin_filter <- function(seurat = NULL, species = "human", percent_mt = NULL, m
 #' @param verbose Boolean. To show progress, TRUE, else FALSE.
 #' @param logScale Numeric. Set the scale to log normalize data. Default to 10000.
 #' @param remove_duplicates Boolean. To remove duplicate features that may be found in the data, use TRUE, else FALSE and the function will notify you if duplicate features are found.
+#' @param pca_npcs Numeric. Total number of principal components to compute for PCA plot. Default is 30.
 #' @param seed Numeric. Random seed, default is 42. Setting to NULL will remove seed.
 #' @param doublet_pN Numeric. The number of generated artificial doublets, expressed as a proportion of the merged real-artificial data. Default is set to 0.25.
 #' @param doublet_pK Numeric. The principal component neighborhood size to compute pANN, expressed as a proportion of the merged real-artificial data. Default is 0.09.

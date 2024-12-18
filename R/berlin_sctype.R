@@ -27,7 +27,7 @@ ScType_genesets <- function() {
 #' @param scaled Boolean. TRUE if the data has already been scaled. If the data still needs to be scaled, FALSE and the function will scale the data.
 #' @param geneset String. Input a tissue geneset name from the provided in the package (see details). Run ScType_genesets() function to view available genesets.
 #' @param pos_geneset List object. A list of positive marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.
-#' @param neg_genesetList object. A list of negative marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.
+#' @param neg_geneset List object. A list of negative marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.
 #' @param verbose Boolean. To show progress, TRUE, else FALSE.
 #'
 #' @return Matrix
@@ -40,10 +40,10 @@ berlin_sctype <- function(object = NULL, scaled = TRUE, geneset = "immune", pos_
   # Check input data
   if (is.null(object)) stop("Please supply Seurat object as input.")
   if (scaled) {
-    if ("scale.data" %in% Layers(object)) {
+    if ("scale.data" %in% SeuratObject::Layers(object)) {
       data <- object@assays$RNA$scale.data
     } else {
-      stop("Layer ‘scale.data’ is empty. Add scaled data to set 'scaled' argument to FALSE.")
+      stop("Layer 'scale.data' is empty. Add scaled data to set 'scaled' argument to FALSE.")
     }
   } else {
     data <- object@assays$RNA$data
@@ -144,7 +144,7 @@ berlin_sctype <- function(object = NULL, scaled = TRUE, geneset = "immune", pos_
   )                                                         # The geneset scores for each barcode are rbinded to a line to make a data frame
 
   dimnames(es) = list(names(gs_pos), colnames(data_gs_weighted))
-  es.max <- es[complete.cases(es),]
+  es.max <- es[stats::complete.cases(es),]
   return(es.max)
 
 }

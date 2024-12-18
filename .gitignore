@@ -7,3 +7,10 @@ Archived_Code.zip
 BERLIN_Testing/
 .Rbuildignore
 BERLIN.Rproj
+runUMAPapp.R
+inst/
+data/Geneset_Categories_HS.rda
+data/Geneset_Categories_MM.rda
+data/Geneset_list_MM.rda
+data/Geneset_list_HS.rda
+man/runUMAPapp.Rd

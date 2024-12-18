@@ -176,7 +176,7 @@ berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", 
   if (!is.null(object)) {
     if (!(class(object) == "Seurat")) stop("Input object must be Seurat object.")
     # detect species
-    species_detected <- detect_species(Features(object))
+    species_detected <- detect_species(SeuratObject::Features(object))
     # if different than input species, notify user
     if (species_detected != species) {
       message(paste0("Species detected does not equeal the species argument. Will be treating data as ",species_detected," data."))
@@ -184,7 +184,7 @@ berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", 
   }
 
   if (!assay %in% names(object)) stop("Assay input is not found in object")
-  DefaultAssay(object) <- assay
+  SeuratObject::DefaultAssay(object) <- assay
   if (verbose) {
     message("Filtering minFeatures and percent mitochondria")
   }

@@ -152,12 +152,12 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
 
   if (is.null(model)) {
     # detect species
-    species_detected <- detect_species(Features(object))
+    species_detected <- detect_species(SeuratObject::Features(object))
     # if different than input species, notify user
     if (species_detected != species) {
       message(paste0("Species detected does not equeal the species argument. Will be treating data as ",species_detected," data."))
     }
-    scGate_models_DB <-  get_scGateDB()
+    scGate_models_DB <-  scGate::get_scGateDB()
     model <- scGate_models_DB[[species_detected]]
   } else {
     if (is.data.frame(model)) {

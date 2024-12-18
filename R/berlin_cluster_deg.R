@@ -26,7 +26,7 @@ berlin_cluster_deg <- function(object = NULL, assay = "RNA", cluster_col = "seur
   if (is.null(object)) stop("Please supply Seurat object as input.")
 
   if (!assay %in% names(object)) stop("Assay input is not found in object")
-  DefaultAssay(object) <- assay
+  SeuratObject::DefaultAssay(object) <- assay
 
   SinglCell_Cluster_gs <- data.frame(term = character(0),gene = character(0))
   cluster_marker_list <- list()
@@ -35,9 +35,9 @@ berlin_cluster_deg <- function(object = NULL, assay = "RNA", cluster_col = "seur
     if (!cluster_col %in% names(object[[]])) {
       stop("cluster_col input not found in object meta data.")
     } else {
-      Idents(object) <- cluster_col
+      SeuratObject::Idents(object) <- cluster_col
       # get the number of cells in each cluster
-      cluster_sizes <- table(Idents(object))
+      cluster_sizes <- table(SeuratObject::Idents(object))
       # only include clusters with more than 2 cells (FindMaker will only work on clusters that have at least 3 cells )
       clusters <- names(cluster_sizes)[cluster_sizes > 2]
 
@@ -65,9 +65,9 @@ berlin_cluster_deg <- function(object = NULL, assay = "RNA", cluster_col = "seur
     if (!meta_cluster_col %in% names(object[[]])) {
       stop("meta_cluster_col input not found in object meta data.")
     } else {
-      Idents(object) <- meta_cluster_col
+      SeuratObject::Idents(object) <- meta_cluster_col
       # get the number of cells in each cluster
-      meta_cluster_col_sizes <- table(Idents(object))
+      meta_cluster_col_sizes <- table(SeuratObject::Idents(object))
       # only include clusters with more than 2 cells (FindMaker will only work on clusters that have at least 3 cells )
       meta_cluster_cols <- names(meta_cluster_col_sizes)[meta_cluster_col_sizes > 2]
 

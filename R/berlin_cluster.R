@@ -31,7 +31,7 @@ berlin_cluster <- function(object = NULL, assay = "RNA", seed = 42, verbose = TR
   if (is.null(object)) stop("Please supply Seurat object")
 
   if (!assay %in% names(object)) stop("Assay input is not found in object")
-  DefaultAssay(object) <- assay
+  SeuratObject::DefaultAssay(object) <- assay
 
   object <- Seurat::RunPCA(object, npcs = pca_npcs, verbose = verbose, seed.use = seed)
   object <- Seurat::RunTSNE(object, reduction = "pca", dims = tsne_dims, seed.use = seed)

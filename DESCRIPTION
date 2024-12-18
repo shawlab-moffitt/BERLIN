@@ -22,8 +22,7 @@ Additional_repositories:
 Remotes:
     mojaveazure/seurat-disk,
     chris-mcginnis-ucsf/DoubletFinder,
-    immunogenomics/presto,
-    LTLA/celldex
+    immunogenomics/presto
 Imports:
     dplyr,
     tibble,

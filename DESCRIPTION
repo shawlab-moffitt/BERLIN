@@ -52,9 +52,7 @@ biocViews:
     SingleCellExperiment,
     SeuratDisk,
     BiocParallel,
-    rhdf5,
-    GenomeInfoDbData,
-    celldex
+    rhdf5
 Depends: 
     R (>= 3.5.0)
 LazyData: true

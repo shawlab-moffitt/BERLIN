@@ -29,7 +29,8 @@ Imports:
     rhdf5,
     tibble,
     scGate,
-    UCell
+    UCell,
+    reshape2
 remotes:
     mojaveazure/seurat-disk,
     chris-mcginnis-ucsf/DoubletFinder,

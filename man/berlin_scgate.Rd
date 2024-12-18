@@ -2,7 +2,7 @@
 % Please edit documentation in R/berlin_scgate.R
 \name{berlin_scgate}
 \alias{berlin_scgate}
-\title{Performs ScGate function on a Seurat object with one or multiple models}
+\title{Performs scGate function on a Seurat object with one or multiple models}
 \usage{
 berlin_scgate(
   object = NULL,
@@ -38,5 +38,5 @@ berlin_scgate(
 Seurat object.
 }
 \description{
-Performs ScGate function on a Seurat object with one or multiple models
+Performs scGate function on a Seurat object with one or multiple models
 }

@@ -3154,14 +3154,16 @@ server <- function(input, output, session) {
     }
   )
 
-
+  # Prevents error when app closes
+  session$onSessionEnded(function() { stopApp() })
 
 }
 
 
 
-
 # Run the application
 shinyApp(ui = ui, server = server)
+
+
 
 

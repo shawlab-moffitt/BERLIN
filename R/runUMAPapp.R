@@ -98,7 +98,7 @@ runUMAPapp <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000
     write.table(meta,paste0("BERLIN_",project_name,"_MetaData_",Sys.Date(),".txt"), sep = '\t', row.names = F)
   }
 
-  shinyOptions(project_name = project_name, counts = counts, meta = meta, species_detected = species_detected,
+  shiny::shinyOptions(project_name = project_name, counts = counts, meta = meta, species_detected = species_detected,
                umap1_col = umap1_col, umap2_col = umap2_col,
                anno1_col = anno1_col, anno2_col = anno2_col, anno3_col = anno3_col)
 

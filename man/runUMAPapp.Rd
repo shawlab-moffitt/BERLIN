@@ -21,7 +21,8 @@ runUMAPapp(
   species = "human",
   remove_duplicates = TRUE,
   launch.browser = TRUE,
-  species_detected = "human"
+  species_detected = "human",
+  verbose = TRUE
 )
 }
 \arguments{

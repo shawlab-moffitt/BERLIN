@@ -1,5 +1,26 @@
 
 
+####----Install and load packages----####
+
+packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","cowplot","patchwork",
+              "ggdendro","factoextra","dplyr","DT","viridis","readr","tidyverse","ggrepel","ggVennDiagram","ggtree",
+              "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales", "data.table")
+
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+invisible(lapply(packages, library, character.only = TRUE))
+#bioconductor packages
+bioCpacks <- c("clusterProfiler","GSVA","slingshot","SingleCellExperiment")
+installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
+if (any(installed_packages_BIOC == FALSE)) {
+  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
+}
+invisible(lapply(bioCpacks, library, character.only = TRUE))
+
+
+
 ##################################
 ##                              ##
 ## Pre Calculate UMAP Shiny App ##
@@ -8,7 +29,12 @@
 
 appDir <- getwd()
 
+#counts <- as.data.frame(data.table::fread("~/R/Projects/BERLIN/BERLIN_Project_NormCounts_2024-12-20.txt"))
+#meta <- as.data.frame(data.table::fread("~/R/Projects/BERLIN/BERLIN_Project_MetaData_2024-12-20.txt"))
+
 project_name_default = "BERLIN_Project"
+#counts_default = counts
+#meta_default = meta
 counts_default = NULL
 meta_default = NULL
 umap1_col_default = "UMAP_1"
@@ -17,6 +43,16 @@ anno1_col_default = "seurat_clusters"
 anno2_col_default = NULL
 anno3_col_default = NULL
 species_detected_default = "human"
+
+#project_name <- project_name_default
+#counts <- counts_default
+#meta <- meta_default
+#umap1_col <- umap1_col_default
+#umap2_col <- umap2_col_default
+#anno1_col <- anno1_col_default
+#anno2_col <- anno2_col_default
+#anno3_col <- anno3_col_default
+#species_detected <- species_detected_default
 
 project_name <- getShinyOption("project_name", project_name_default)
 counts <- getShinyOption("counts", counts_default)
@@ -56,24 +92,6 @@ if (tolower(species_detected) == "human") {
   GeneSet_Cats <- unique(GeneSet_CatTab[,1])
 }
 
-####----Install and load packages----####
-
-packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","cowplot","patchwork",
-              "ggdendro","factoextra","dplyr","DT","viridis","readr","tidyverse","ggrepel","ggVennDiagram","ggtree",
-              "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales")
-
-installed_packages <- packages %in% rownames(installed.packages())
-if (any(installed_packages == FALSE)) {
-  install.packages(packages[!installed_packages])
-}
-invisible(lapply(packages, library, character.only = TRUE))
-#bioconductor packages
-bioCpacks <- c("clusterProfiler","GSVA","slingshot","SingleCellExperiment")
-installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
-if (any(installed_packages_BIOC == FALSE)) {
-  BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
-}
-invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
 #increase file upload size

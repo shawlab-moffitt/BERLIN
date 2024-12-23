@@ -7,3 +7,6 @@ Archived_Code.zip
 BERLIN_Testing/
 .Rbuildignore
 BERLIN.Rproj
+inst/doc
+/doc/
+/Meta/

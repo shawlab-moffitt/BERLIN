@@ -1,0 +1,6 @@
+CellType	Level1Pos	Level1Neg	Level2Pos	Level2Neg	Level3Pos	Level3Neg
+Macrophage	Immune	Macrophage_Negative	Macrophage	"Classical_TIMs,Nonclassical_monocytes,Intermediate_monocyes,Dendritic_cells"		
+Classical_TIMs	Immune	Classical_TIMs_Negative	Classical_TIMs	"Nonclassical_monocytes,Intermediate_monocyes,Macrophage,Dendritic_cells"		
+Dendritic	Immune	Dendritic_Negative	Dendritic_cells	"Classical_TIMs,Nonclassical_monocytes,Intermediate_monocyes,Macrophage"		
+Nonclassical_monocytes	Immune	Nonclassical_monocytes_Negative	Nonclassical_monocytes	"Classical_TIMs,Intermediate_monocyes,Macrophage,Dendritic_cells"		
+Intermediate_monocyes	Immune	Intermediate_monocyes_Negative	Intermediate_monocyes	"Classical_TIMs,Nonclassical_monocytes,Macrophage,Dendritic_cells"		

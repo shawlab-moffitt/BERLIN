@@ -190,7 +190,7 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
   colnames(cL_results) <- c(cluster_col,scType_col,"scType Score Sum","ncells")
   rownames(cL_results) <- NULL
 
-  cL_results[,scType_col][as.numeric(cL_results[,3]) < as.numeric(cL_results[,4])/4] = "Unknown"
+  cL_results[,scType_col][as.numeric(cL_results[,"scType Score Sum"]) < as.numeric(cL_results[,"ncells"])/4] = "Unknown"
 
   meta <- cbind(barcode = rownames(meta),meta)
   col2move2 <- colnames(meta)[which(colnames(meta)==cluster_col)-1]

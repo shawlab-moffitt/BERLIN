@@ -113,7 +113,7 @@ class(cluster_deg)
 
 # List of FindMarkers results
 class(cluster_deg$Cluster_Markers_DEG)
-head(cluster_deg$Cluster_Markers_DEG[[1]])
+head(cluster_deg$Cluster_Markers_DEG[["seurat_clusters_Cluster_0_Upregulated"]])
 
 # Geneset of significant up and downregulated FindMarkers results
 class(cluster_deg$Cluster_Markers_Geneset)
@@ -185,7 +185,7 @@ DT::datatable(head(sctype_immune_res,c(20,20)),
 ### Example Model Parameters Input
 
 ```{r message=FALSE, warning=FALSE}
-model_param <- read.delim("scGAte_Params_test_noTcell_20241023.txt", sep = '\t', header = T)
+model_param <- read.delim("scGate_Params_myeloid_macrophage_model.txt", sep = '\t', header = T)
 
 DT::datatable(model_param,
               options = list(lengthMenu = c(5,10, 20, 100, 1000),
@@ -196,13 +196,13 @@ DT::datatable(model_param,
 ### Model Generation
 
 ```{r message=FALSE, warning=FALSE}
-scGate_model_noTcell <- berlin_scgate_model(params = model_param)
+scGate_myl_mac_model <- berlin_scgate_model(params = model_param)
 
 # Model composed of multiple celltypes
-class(scGate_model_noTcell)
+class(scGate_myl_mac_model)
 
 # Example celltype data
-DT::datatable(scGate_model_noTcell$Macrophage,
+DT::datatable(scGate_myl_mac_model$Macrophage,
               options = list(lengthMenu = c(5,10, 20, 100, 1000),
                              pageLength = 5,
                              scrollX = T))
@@ -212,8 +212,8 @@ DT::datatable(scGate_model_noTcell$Macrophage,
 
 ```{r message=FALSE, warning=FALSE}
 obj_qc_anno_clpr_scg_singlemod <- berlin_scgate(object = obj_qc_anno_clpr,
-                                                model = scGate_model_noTcell,
-                                                model_name = "noTcell_model")
+                                                model = scGate_myl_mac_model,
+                                                model_name = "Myeloid_Macrohphage")
 
 # scGate Results appended to metadata
 scg_singlemod_meta <- obj_qc_anno_clpr_scg_singlemod[[]]
@@ -268,7 +268,7 @@ DT::datatable(scg_multimod_meta,
 
 ```{r message=FALSE, warning=FALSE}
 scg_simpmod_summ <- berlin_scgate_summarize(obj_qc_anno_clpr_scg_singlemod,
-                                            celltype_col = "scGate_noTcell_model_Celltype",
+                                            celltype_col = "scGate_Myeloid_Macrohphage_Celltype",
                                             cluster_col = "seurat_clusters")
 # scGate Summary
 DT::datatable(scg_simpmod_summ,

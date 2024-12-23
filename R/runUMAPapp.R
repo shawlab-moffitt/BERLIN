@@ -40,7 +40,7 @@ runUMAPapp <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000
                        umap1_col = "UMAP_1", umap2_col = "UMAP_2", anno1_col = "seurat_clusters", anno2_col = NULL, anno3_col = NULL,
                        seed = 42, species = "human", remove_duplicates = TRUE, launch.browser = TRUE, species_detected = "human", verbose = TRUE) {
 
-  set.seed(42)
+  set.seed(seed)
   if (is.null(object) & is.null(counts)) stop("Please supply Seurat object or counts matrix")
 
   if (!is.null(counts) & is.null(object)) {

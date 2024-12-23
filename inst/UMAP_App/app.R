@@ -2349,7 +2349,7 @@ server <- function(input, output, session) {
             }
 
             if (StatMethod != "None") {
-              barp <- barp + stat_compare_means(data = feat_gene2, aes(x=Type,y=FeatureName), method = StatMethod)
+              barp <- barp + ggpubr::stat_compare_means(data = feat_gene2, aes(x=Type,y=FeatureName), method = StatMethod)
             }
 
             barp <- barp + coord_cartesian(clip = "off")
@@ -2384,7 +2384,7 @@ server <- function(input, output, session) {
             #  barp <- ggplot(data = feat_gene2, aes(x=Type,y=FeatureName, fill=Type))
             #}
             if (StatMethod != "None") {
-              barp <- barp + stat_compare_means(data = feat_gene2,
+              barp <- barp + ggpubr::stat_compare_means(data = feat_gene2,
                                                 aes(x=Type,y=FeatureName),
                                                 method = StatMethod,
                                                 label.x = 1,

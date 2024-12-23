@@ -151,4 +151,61 @@ berlin_sctype <- function(object = NULL, scaled = TRUE, geneset = "immune", pos_
 
 
 
+#' Assign cluster to scType
+#'
+#' @param object Seurat object.
+#' @param score Matrix. Results from berlin_scType function, of a matrix with rownames as scTypes and columns of each cell and their associated scType enrichment score.
+#' @param meta data.frame. If no Seurat object available, please provide meta data with the cluster column and rownames matching score cell names.
+#' @param cluster_col String. Column name of meta data column that annotated clusters. Defaults to "seurat_clusters".
+#' @param scType_col String. Desired column name for column to store scType classification results. Defaults to "scType_classification".
+#' @param verbose Boolean. To show progress, TRUE, else FALSE.
+#'
+#' @return Seurat object with appended meta data.
+#' @export
+#'
+#'
+
+
+berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, cluster_col = "seurat_clusters", scType_col = "scType_classification", verbose = TRUE) {
+
+  if (is.null(object) & is.null(meta)) stop("Please provide Seurat object or meta data.")
+  if (is.null(meta) & !is.null(object)) {
+    meta <- object[[]]
+  }
+  if (is.null(cluster_col) & (!"seurat_clusters" %in% colnames(meta))) stop("Please provide cluster column name.")
+
+
+  if (verbose) {
+    message("Calculating scType cluster results.")
+  }
+
+  cL_results = do.call("rbind", lapply(unique(meta[,cluster_col]), function(cl){
+
+    es.max.cl = sort(rowSums(score[ ,rownames(meta[meta[,cluster_col]==cl, ])]), decreasing = T)
+    head(data.frame(cluster = cl, type = names(es.max.cl), scores = es.max.cl, ncells = sum(meta[,cluster_col]==cl)), 1)
+
+  }))
+
+  if (verbose) {
+    message("Appending meta data")
+  }
+
+  colnames(cL_results) <- c(cluster_col,scType_col,"scType Score Sum","ncells")
+  rownames(cL_results) <- NULL
+
+  cL_results[,scType_col][as.numeric(cL_results[,3]) < as.numeric(cL_results[,4])/4] = "Unknown"
+
+  meta <- cbind(barcode = rownames(meta),meta)
+  col2move2 <- colnames(meta)[which(colnames(meta)==cluster_col)-1]
+  meta2 <- merge(meta,cL_results, all.x = T, sort = F)
+  meta2 <- meta2 %>%
+    relocate(any_of(c(cluster_col)), .after = !!sym(col2move2)) %>%
+    as.data.frame()
+  rownames(meta2) <- meta2[,1]
+  meta3 <- meta2[rownames(meta),]
+
+  object <- Seurat::AddMetaData(object,metadata = meta3)
+  object
+}
+
 

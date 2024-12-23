@@ -174,16 +174,13 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
   }
   if (is.null(cluster_col) & (!"seurat_clusters" %in% colnames(meta))) stop("Please provide cluster column name.")
 
-
   if (verbose) {
     message("Calculating scType cluster results.")
   }
 
   cL_results = do.call("rbind", lapply(unique(meta[,cluster_col]), function(cl){
-
     es.max.cl = sort(rowSums(score[ ,rownames(meta[meta[,cluster_col]==cl, ])]), decreasing = T)
     head(data.frame(cluster = cl, type = names(es.max.cl), scores = es.max.cl, ncells = sum(meta[,cluster_col]==cl)), 1)
-
   }))
 
   if (verbose) {

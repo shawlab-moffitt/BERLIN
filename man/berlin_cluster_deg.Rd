@@ -7,8 +7,7 @@
 berlin_cluster_deg(
   object = NULL,
   assay = "RNA",
-  cluster_col = "seurat_clusters",
-  meta_cluster_col = NULL,
+  cluster_cols = "seurat_clusters",
   min.pct = 0.25,
   adjpval_cutoff = 0.05,
   log2fc_cutoff = 0,
@@ -18,17 +17,15 @@ berlin_cluster_deg(
 \arguments{
 \item{object}{Seurat object. If NULL, must supply count data.}
 
-\item{assay}{String. Name of the initial/default assay.}
+\item{assay}{String. Name of the initial/default assay. Default is RNA.}
 
-\item{cluster_col}{String. Column name from meta data of primary identified clusters. Default to 'seurat_clusters'.}
-
-\item{meta_cluster_col}{String. Column name from meta data of an additional column to use for clustering and differential gene expression. Optional.}
+\item{cluster_cols}{String or Vector. Column name from meta data of primary identified clusters. Default to 'seurat_clusters'. Multiple columns allowed.}
 
 \item{min.pct}{Numeric. Only test genes that are detected in a minimum fraction of cells. Default is 0.25.}
 
-\item{adjpval_cutoff}{Numeric. An adjusted p-value value cutoff for identifying significantly expressed genes. default is 0.05.}
+\item{adjpval_cutoff}{Numeric. An adjusted p-value value cutoff for identifying significantly expressed genes. Default is 0.05.}
 
-\item{log2fc_cutoff}{Numeric. An absolute value of a log2 fold change cutoff to identify up and down regulated genes. Defualt is 0.}
+\item{log2fc_cutoff}{Numeric. An absolute value of a log2 fold change cutoff to identify up and down regulated genes. Default is 0.}
 
 \item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
 }

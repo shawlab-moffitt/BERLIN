@@ -152,6 +152,12 @@ berlin_run_scgate <- function(object = NULL, model = NULL, model_name = NULL, as
 berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name = NULL, pos.thr = 0.2, neg.thr = 0.2,
                           species = "human", ncores = 1, seed = 42, verbose = TRUE) {
 
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_scgate"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
+
   if (is.null(object)) stop("Please supply Seurat object")
 
   if (is.null(model)) {
@@ -188,6 +194,11 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
     message("Adding new meta data")
   }
   object <- Seurat::AddMetaData(object,metadata = new_meta)
+
+  slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                time.stamp = time.stamp,
+                                                                call.string = call.string,
+                                                                params = argg)
 
   return(object)
 

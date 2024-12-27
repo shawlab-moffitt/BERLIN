@@ -132,6 +132,12 @@ berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", 
                       percent_mt = NULL, minFeatures = 500, varFeatures = 2000, verbose = TRUE, logScale = 10000, remove_duplicates = TRUE,
                       pca_npcs = 30, doublet_pN = 0.25, doublet_pK = 0.09, doublet_prop = 0.04, doublet_PCs = 1:10) {
 
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_qc"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
+
 
   if (is.null(object) & is.null(counts)) stop("Please supply Seurat object or counts matrix")
 
@@ -223,5 +229,13 @@ berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", 
     object <- Seurat::AddMetaData(object,metadata = meta)
   }
 
+  slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                             time.stamp = time.stamp,
+                                                             call.string = call.string,
+                                                             params = argg)
+
+
   return(object)
 }
+
+

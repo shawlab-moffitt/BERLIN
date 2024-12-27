@@ -23,6 +23,11 @@
 berlin_cluster <- function(object = NULL, assay = "RNA", seed = 42, verbose = TRUE, resolution = c(0.5,1,1.5,2),
                                 pca_npcs = 30, tsne_dims = 1:30, umap_dims = 1:10, neighbor_dims = 1:30) {
 
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_cluster"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
 
   if (is.null(object)) stop("Please supply Seurat object")
 
@@ -41,6 +46,11 @@ berlin_cluster <- function(object = NULL, assay = "RNA", seed = 42, verbose = TR
   # Add tSNE coordinates to the metadata
   tsne <- as.data.frame(SeuratObject::Embeddings(object = object[["tsne"]]))
   object <- Seurat::AddMetaData(object,metadata = tsne)
+
+  slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                time.stamp = time.stamp,
+                                                                call.string = call.string,
+                                                                params = argg)
 
   return(object)
 

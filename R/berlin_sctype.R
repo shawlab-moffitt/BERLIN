@@ -168,6 +168,12 @@ berlin_sctype <- function(object = NULL, scaled = TRUE, geneset = "immune", pos_
 
 berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, cluster_col = "seurat_clusters", scType_col = "scType_classification", verbose = TRUE) {
 
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_sctype_classify"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
+
   if (is.null(object) & is.null(meta)) stop("Please provide Seurat object or meta data.")
   if (is.null(meta) & !is.null(object)) {
     meta <- object[[]]
@@ -203,7 +209,13 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
   meta3 <- meta2[rownames(meta),]
 
   object <- Seurat::AddMetaData(object,metadata = meta3)
-  object
+
+  slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                time.stamp = time.stamp,
+                                                                call.string = call.string,
+                                                                params = argg)
+
+  return(object)
 }
 
 

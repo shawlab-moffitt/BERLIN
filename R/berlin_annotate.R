@@ -13,6 +13,12 @@
 #'
 berlin_annotate <- function(object = NULL, verbose = TRUE) {
 
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_annotate"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
+
   if (is.null(object)) stop("Please supply Seurat object as input.")
 
   # Load reference databases from celldex
@@ -81,5 +87,10 @@ berlin_annotate <- function(object = NULL, verbose = TRUE) {
   object@meta.data$blue.main <- blue.main$pruned.labels
   object@meta.data$blue.fine <- blue.fine$pruned.labels
 
+
+  slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                time.stamp = time.stamp,
+                                                                call.string = call.string,
+                                                                params = argg)
   return(object)
 }

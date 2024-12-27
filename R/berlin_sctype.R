@@ -199,6 +199,7 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
     relocate(any_of(c(cluster_col)), .after = !!sym(col2move2)) %>%
     as.data.frame()
   rownames(meta2) <- meta2[,1]
+  meta2 <- meta2[,-1]
   meta3 <- meta2[rownames(meta),]
 
   object <- Seurat::AddMetaData(object,metadata = meta3)

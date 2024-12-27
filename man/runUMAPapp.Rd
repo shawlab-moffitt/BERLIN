@@ -11,6 +11,7 @@ runUMAPapp(
   n_cells = 2000,
   assay = "RNA",
   save_data = TRUE,
+  save_to = getwd(),
   project_name = "BERLIN_Project",
   umap1_col = "UMAP_1",
   umap2_col = "UMAP_2",

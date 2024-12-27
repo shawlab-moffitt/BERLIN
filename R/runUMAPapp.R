@@ -36,7 +36,7 @@
 #' @import scales
 #' @import data.table
 #'
-runUMAPapp <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000, assay = "RNA", save_data = TRUE, project_name = "BERLIN_Project",
+runUMAPapp <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000, assay = "RNA", save_data = TRUE, save_to = getwd(), project_name = "BERLIN_Project",
                        umap1_col = "UMAP_1", umap2_col = "UMAP_2", anno1_col = "seurat_clusters", anno2_col = NULL, anno3_col = NULL,
                        seed = 42, species = "human", remove_duplicates = TRUE, launch.browser = TRUE, species_detected = "human", verbose = TRUE) {
 
@@ -116,8 +116,8 @@ runUMAPapp <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000
     if (verbose) {
       message(paste0("Saving app input data to: ",getwd()))
     }
-    data.table::fwrite(counts,paste0(project_name,"_NormCounts_",Sys.Date(),".txt"), sep = '\t', na = NA)
-    data.table::fwrite(meta,paste0(project_name,"_MetaData_",Sys.Date(),".txt"), sep = '\t', na = NA)
+    data.table::fwrite(counts,paste0(save_to,"/",project_name,"_NormCounts_",Sys.Date(),".txt"), sep = '\t', na = NA)
+    data.table::fwrite(meta,paste0(save_to,"/",project_name,"_MetaData_",Sys.Date(),".txt"), sep = '\t', na = NA)
   }
 
   if (verbose) {

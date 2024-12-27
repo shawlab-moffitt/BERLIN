@@ -65,7 +65,9 @@ berlin_cluster_deg <- function(object = NULL, assay = "RNA", cluster_cols = "seu
           }
           i <- i+1
         }
-        close(pb)
+        if (verbose) {
+          close(pb)
+        }
       }
 
     }
@@ -209,7 +211,7 @@ berlin_dotplot <- function(object = NULL, geneset = NULL, cluster_col = "seurat_
         gs <- geneset
         geneset <- stack(gs)
         geneset <- geneset[,c(2,1)]
-        colnames(geneset) <- c("term","gene")
+        colnames(geneset) <- c("Annotation","Gene.Symbol")
       }
       if (verbose) {
         base::message("Intersecting cluster markers with geneset.")
@@ -219,10 +221,10 @@ berlin_dotplot <- function(object = NULL, geneset = NULL, cluster_col = "seurat_
       dp <- Seurat::DotPlot(object = object, features = unique(geneset[,2]))
       dp_data <- dp$data
 
-      dp_data_gs <- merge(geneset,dp_data, by.x = "gene",by.y = "features.plot")
+      dp_data_gs <- merge(geneset,dp_data, by.x = "Gene.Symbol",by.y = "features.plot")
 
       dotplot <- dp_data_gs %>%
-        ggplot2::ggplot(aes(x=id, y = gene, color = avg.exp.scaled, size = pct.exp)) +
+        ggplot2::ggplot(aes(x=id, y = Gene.Symbol, color = avg.exp.scaled, size = pct.exp)) +
         ggplot2::geom_point() +
         ggplot2::theme_bw() +
         ggplot2::scale_colour_gradient2(low = "dark blue", high = "dark red", mid = "white") +
@@ -237,7 +239,7 @@ berlin_dotplot <- function(object = NULL, geneset = NULL, cluster_col = "seurat_
                        strip.background.y = element_blank(),
                        strip.text.y.left = element_text(face = "bold", hjust = 1, size = strip_text_size, angle = 0)) +
         ggplot2::scale_y_discrete(position = "left") +
-        ggplot2::facet_grid(term ~ ., switch = "y", scales = "free", space = "free") +
+        ggplot2::facet_grid(Annotation ~ ., switch = "y", scales = "free", space = "free") +
         ggplot2::xlab(cluster_col) +
         ggplot2::ggtitle(plot_title)
 

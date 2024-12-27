@@ -2,7 +2,7 @@
 title: "BERLIN"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{BERLIN_Tutorial}
+  %\VignetteIndexEntry{BERLIN}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,7 +16,6 @@ vignette: >
       max-width: 1280px !important;
     }
 ```
-
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -95,11 +94,13 @@ obj_qc_anno <- berlin_annotate(object = obj_qc,
 </center>
 
 ```{r message=FALSE, warning=FALSE}
-obj_qc_anno_clpr <- berlin_cluster(object = obj_qc_anno)
-print(obj_qc_anno_clpr)
+obj_qc_anno_cl <- berlin_cluster(object = obj_qc_anno)
+print(obj_qc_anno_cl)
 ```
 
-# Differential Gene Exprssion
+# Finding Cluster Markers
+
+## Differential gene expression across clusters
 
 <center>
 
@@ -108,7 +109,8 @@ print(obj_qc_anno_clpr)
 </center>
 
 ```{r message=FALSE, warning=FALSE}
-cluster_deg <- berlin_cluster_deg(object = obj_qc_anno_clpr)
+cluster_deg <- berlin_cluster_deg(object = obj_qc_anno_cl,
+                                  verbose = FALSE)
 class(cluster_deg)
 
 # List of FindMarkers results
@@ -118,6 +120,46 @@ head(cluster_deg$Cluster_Markers_DEG[["seurat_clusters_Cluster_0_Upregulated"]])
 # Geneset of significant up and downregulated FindMarkers results
 class(cluster_deg$Cluster_Markers_Geneset)
 head(cluster_deg$Cluster_Markers_Geneset)
+```
+
+## Intersect Genesets with Cluster Markers
+
+<center>
+
+![BERLIN scType Workflow](berlin_intersect.PNG){width="100%"}
+
+</center>
+
+```{r message=FALSE, warning=FALSE}
+Tumor_MyelMarks_HS <- read.delim("PMID35690521_HumanTumorMyeloidMarkers_20241226.tsv", sep = '\t', header = T)
+head(Tumor_MyelMarks_HS)
+
+obj_intersect_TumMyelMarks_df <- berlin_intersect(object = obj_qc_anno_cl,
+                                                  geneset = Tumor_MyelMarks_HS)
+
+DT::datatable(obj_intersect_TumMyelMarks_df,
+              options = list(lengthMenu = c(5,10, 20, 100, 1000),
+                             pageLength = 5,
+                             scrollX = T))
+```
+
+## Dotplot Heatmap of Grouped Geneset Gene Expression Across Clusters
+
+<center>
+
+![BERLIN scType Workflow](berlin_dotplot.PNG){width="100%"}
+
+</center>
+
+```{r message=FALSE, warning=FALSE, fig.height = 7, fig.width = 14}
+# Subset geneset to annotations of interest
+genesets_of_interest <- c("IFN-TAMs-Human-TF","Inflamed-TAMs-Human-FunctionalSig","Classical-Tumor-Infiltrating-Monocyte-in-Human-TF")
+Tumor_MyelMarks_HS_sub <- Tumor_MyelMarks_HS[which(Tumor_MyelMarks_HS$Annotation %in% genesets_of_interest),]
+
+# Generate dotplot heatmap
+dotplot <- berlin_dotplot(object = obj_qc_anno_cl,
+                          geneset = Tumor_MyelMarks_HS_sub)
+dotplot
 ```
 
 # scType
@@ -149,7 +191,7 @@ head(ScType_brain_PosIndicator_Geneset_DB,3)
 ## Running BERLIN Provided Geneset
 
 ```{r message=FALSE, warning=FALSE}
-sctype_brain_res <- berlin_sctype(object = obj_qc_anno_clpr,
+sctype_brain_res <- berlin_sctype(object = obj_qc_anno_cl,
                                   geneset = "brain")
 
 DT::datatable(head(sctype_brain_res,c(20,20)),
@@ -161,12 +203,29 @@ DT::datatable(head(sctype_brain_res,c(20,20)),
 ## Running Positive and Negative Indicator Genesets
 
 ```{r message=FALSE, warning=FALSE}
-sctype_immune_res <- berlin_sctype(object = obj_qc_anno_clpr,
+sctype_immune_res <- berlin_sctype(object = obj_qc_anno_cl,
                                    pos_geneset = ScType_immune_system_PosIndicator_Geneset_DB,
                                    neg_geneset = ScType_immune_system_PosIndicator_Geneset_DB)
 
 # scType enrichment score matrix
 DT::datatable(head(sctype_immune_res,c(20,20)),
+              options = list(lengthMenu = c(5,10, 20, 100, 1000),
+                             pageLength = 5,
+                             scrollX = T))
+```
+
+## Identify scType Cell Type Classifications
+
+additional columns appended to Seurat object meta data that classify the cell type identified by the scType results matrix.
+
+```{r message=FALSE, warning=FALSE}
+obj_qc_anno_cl_sct <- berlin_sctype_classify(object = obj_qc_anno_cl,
+                                             score = sctype_immune_res,
+                                             cluster_col = "seurat_clusters",
+                                             scType_col = "scType_classification")
+sctype_new_meta <- obj_qc_anno_cl_sct[[]]
+# scType enrichment score matrix
+DT::datatable(sctype_new_meta,
               options = list(lengthMenu = c(5,10, 20, 100, 1000),
                              pageLength = 5,
                              scrollX = T))
@@ -211,13 +270,13 @@ DT::datatable(scGate_myl_mac_model$Macrophage,
 ### Run Single scGate Model
 
 ```{r message=FALSE, warning=FALSE}
-obj_qc_anno_clpr_scg_singlemod <- berlin_scgate(object = obj_qc_anno_clpr,
-                                                model = scGate_myl_mac_model,
-                                                model_name = "Myeloid_Macrohphage")
+obj_qc_anno_cl_sct_scg_1mod <- berlin_scgate(object = obj_qc_anno_cl_sct,
+                                              model = scGate_myl_mac_model,
+                                              model_name = "Myeloid_Macrohphage")
 
 # scGate Results appended to metadata
-scg_singlemod_meta <- obj_qc_anno_clpr_scg_singlemod[[]]
-DT::datatable(scg_singlemod_meta,
+scg_1mod_meta <- obj_qc_anno_cl_sct_scg_1mod[[]]
+DT::datatable(scg_1mod_meta,
                   options = list(lengthMenu = c(5,10, 20, 100, 1000),
                                  pageLength = 5,
                                  scrollX = T))
@@ -245,11 +304,11 @@ head(scGate_models_DB_human_sub[["CD8_TIL"]][[1]])
 ### Run Multi-Model scGate Analysis
 
 ```{r message=FALSE, warning=FALSE}
-obj_qc_anno_clpr_scg_multimod <- berlin_scgate(object = obj_qc_anno_clpr,
-                                               model = scGate_models_DB_human_sub)
+obj_qc_anno_cl_sct_scg_multimod <- berlin_scgate(object = obj_qc_anno_cl_sct,
+                                                 model = scGate_models_DB_human_sub)
 
 # scGate Results appended to metadata
-scg_multimod_meta <- obj_qc_anno_clpr_scg_multimod[[]]
+scg_multimod_meta <- obj_qc_anno_cl_sct_scg_multimod[[]]
 DT::datatable(scg_multimod_meta,
               options = list(lengthMenu = c(5,10, 20, 100, 1000),
                              pageLength = 5,
@@ -267,11 +326,11 @@ DT::datatable(scg_multimod_meta,
 ### Summarize Single Model Results
 
 ```{r message=FALSE, warning=FALSE}
-scg_simpmod_summ <- berlin_scgate_summarize(obj_qc_anno_clpr_scg_singlemod,
-                                            celltype_col = "scGate_Myeloid_Macrohphage_Celltype",
-                                            cluster_col = "seurat_clusters")
+scg_1mod_summ <- berlin_scgate_summarize(obj_qc_anno_cl_sct_scg_1mod,
+                                         celltype_col = "scGate_Myeloid_Macrohphage_Celltype",
+                                         cluster_col = "seurat_clusters")
 # scGate Summary
-DT::datatable(scg_simpmod_summ,
+DT::datatable(scg_1mod_summ,
               options = list(lengthMenu = c(5,10, 20, 100, 1000),
                              pageLength = 5,
                              scrollX = T))
@@ -280,7 +339,7 @@ DT::datatable(scg_simpmod_summ,
 ### Summarize Multi-Model Results
 
 ```{r message=FALSE, warning=FALSE}
-scg_mulmod_summ <- berlin_scgate_summarize(obj_qc_anno_clpr_scg_multimod)
+scg_mulmod_summ <- berlin_scgate_summarize(obj_qc_anno_cl_sct_scg_multimod)
 
 # scGate Summary
 DT::datatable(scg_mulmod_summ,

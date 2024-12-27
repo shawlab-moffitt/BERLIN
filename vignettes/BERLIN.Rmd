@@ -54,7 +54,7 @@ library("BERLIN")
 The starting data for the BERLIN workflow can be input in two different methods, a Seurat object or a count matrix with an optional meta data table.
 
 ```{r message=FALSE, warning=FALSE}
-h5seruat_file <- "~/R/Projects/BERLIN/vignettes/GSE162631_corrected_merged_both_macrophages_peri_h5.h5seurat"
+h5seruat_file <- "GSE162631_corrected_merged_both_macrophages_peri_h5.h5seurat"
 seruat_obj <- SeuratDisk::LoadH5Seurat(h5seruat_file, assays = "RNA")
 print(seruat_obj)
 ```

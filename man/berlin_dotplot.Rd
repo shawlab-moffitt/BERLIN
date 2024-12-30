@@ -10,8 +10,11 @@ berlin_dotplot(
   cluster_col = "seurat_clusters",
   assay = "RNA",
   min.pct = 0.25,
+  scaled = FALSE,
+  exp_binary = TRUE,
+  log_exp = TRUE,
   adjpval_cutoff = 0.05,
-  log2fc_cutoff = 0,
+  log2fc_cutoff = 1,
   verbose = TRUE,
   plot_title = NULL,
   title_size = 20,
@@ -24,6 +27,8 @@ berlin_dotplot(
 )
 }
 \arguments{
+\item{object}{Seurat object. If NULL, must supply count data.}
+
 \item{geneset}{Data.frame or list. Two column data frame with first column consisting of geneset names and second column of the genes withing that geneset. One gene per row, the geneset name can repeat in the first column. If list input, this would be a named list where the names are the geneset names and each element a vector of genes as strings.}
 
 \item{cluster_col}{String. Column name from meta data of primary identified clusters. Default to 'seurat_clusters'.}
@@ -31,6 +36,12 @@ berlin_dotplot(
 \item{assay}{String. Name of the initial/default assay. Default is RNA.}
 
 \item{min.pct}{Numeric. Only test genes that are detected in a minimum fraction of cells. Default is 0.25.}
+
+\item{scaled}{Boolean. TRUE if plotting scaled expression data, FALSE if un-scaled.}
+
+\item{exp_binary}{Boolean. If TRUE, size of dot will be binary, large if significantly upregulated, small if not. If FALSE, dot size will be based on percent of cells expressing gene.}
+
+\item{log_exp}{Boolean. Only relevant if 'scaled' argument equals FALSE. If TRUE, average expression value will be logged with log2.}
 
 \item{adjpval_cutoff}{Numeric. An adjusted p-value value cutoff for identifying significantly expressed genes. Default is 0.05.}
 
@@ -53,8 +64,6 @@ berlin_dotplot(
 \item{leg_title_size}{Numeric. Legend title font size.}
 
 \item{leg_text_size}{Numeric. Legend text font size.}
-
-\item{objectSeurat}{object. If NULL, must supply count data.}
 }
 \value{
 ggplot object

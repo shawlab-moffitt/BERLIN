@@ -11,7 +11,7 @@ berlin_intersect(
   assay = "RNA",
   min.pct = 0.25,
   adjpval_cutoff = 0.05,
-  log2fc_cutoff = 0,
+  log2fc_cutoff = 1,
   verbose = TRUE
 )
 }

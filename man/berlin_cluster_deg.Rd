@@ -8,10 +8,11 @@ berlin_cluster_deg(
   object = NULL,
   assay = "RNA",
   cluster_cols = "seurat_clusters",
+  verbose = TRUE,
   min.pct = 0.25,
+  min.diff.pct = 0,
   adjpval_cutoff = 0.05,
-  log2fc_cutoff = 0,
-  verbose = TRUE
+  log2fc_cutoff = 1
 )
 }
 \arguments{
@@ -21,13 +22,13 @@ berlin_cluster_deg(
 
 \item{cluster_cols}{String or Vector. Column name from meta data of primary identified clusters. Default to 'seurat_clusters'. Multiple columns allowed.}
 
+\item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
+
 \item{min.pct}{Numeric. Only test genes that are detected in a minimum fraction of cells. Default is 0.25.}
 
 \item{adjpval_cutoff}{Numeric. An adjusted p-value value cutoff for identifying significantly expressed genes. Default is 0.05.}
 
 \item{log2fc_cutoff}{Numeric. An absolute value of a log2 fold change cutoff to identify up and down regulated genes. Default is 0.}
-
-\item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
 }
 \value{
 A list of data frames containing DGE of clusters and a geneset of the markers of each cluster.

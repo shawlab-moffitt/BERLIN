@@ -2,8 +2,11 @@
 
 ####----Install and load packages----####
 
+#packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","cowplot","patchwork",
+#              "ggdendro","factoextra","dplyr","DT","viridis","readr","tidyverse","ggrepel","ggVennDiagram","ggtree",
+#              "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales", "data.table")
 packages <- c("shiny","shinythemes","shinyjqui","pheatmap","RColorBrewer","umap","shinyjs","cowplot","patchwork",
-              "ggdendro","factoextra","dplyr","DT","viridis","readr","tidyverse","ggrepel","ggVennDiagram","ggtree",
+              "ggdendro","factoextra","dplyr","DT","readr","tidyverse","ggrepel","ggVennDiagram","ggtree",
               "shinycssloaders","stringr","tools","plotly","reshape2","ggpubr","gridExtra","scales", "data.table")
 
 installed_packages <- packages %in% rownames(installed.packages())
@@ -193,7 +196,7 @@ if (is.null(PreSelect_Annotation2) || PreSelect_Annotation2 == "") {
 ####----Functions----####
 
 
-g_legend<-function(a.gplot){
+get_legend<-function(a.gplot){
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
   leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
   legend <- tmp$grobs[[leg]]
@@ -2016,24 +2019,24 @@ server <- function(input, output, session) {
         k <- umap_plot_PreC_clin_react_base1()
         m <- umap_plot_PreC_expr_react_base()
         n <- umap_plot_PreC_clin_react_base2()
-        legendk <- g_legend(k)
-        legendm <- g_legend(m)
-        legendn <- g_legend(n)
-        legend_grid <- grid.arrange(legendk,legendm,legendn,nrow = 1)
+        legendk <- cowplot::get_legend(k)
+        legendm <- cowplot::get_legend(m)
+        legendn <- cowplot::get_legend(n)
+        legend_grid <- gridExtra::grid.arrange(legendk,legendm,legendn,nrow = 1)
       }
       else if (input$UMAPannotateSamps1 != " " && input$UMAPannotateSamps2 == " ") {
         k <- umap_plot_PreC_clin_react_base1()
         m <- umap_plot_PreC_expr_react_base()
-        legendk <- g_legend(k)
-        legendm <- g_legend(m)
-        legend_grid <- grid.arrange(legendk,legendm,nrow = 1)
+        legendk <- cowplot::get_legend(k)
+        legendm <- cowplot::get_legend(m)
+        legend_grid <- gridExtra::grid.arrange(legendk,legendm,nrow = 1)
       }
       else if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 != " ") {
         m <- umap_plot_PreC_expr_react_base()
         n <- umap_plot_PreC_clin_react_base2()
-        legendm <- g_legend(m)
-        legendn <- g_legend(n)
-        legend_grid <- grid.arrange(legendm,legendn,nrow = 1)
+        legendm <- cowplot::get_legend(m)
+        legendn <- cowplot::get_legend(n)
+        legend_grid <- gridExtra::grid.arrange(legendm,legendn,nrow = 1)
       }
       if (input$UMAPannotateSamps1 == " " && input$UMAPannotateSamps2 == " ") {
         if (!is.null(input$GeneSelection)) {
@@ -2044,8 +2047,8 @@ server <- function(input, output, session) {
         }
         if (length(GeneSelec) > 0) {
           m <- umap_plot_PreC_expr_react_base()
-          legendm <- g_legend(m)
-          legend_grid <- grid.arrange(legendm,nrow = 1)
+          legendm <- cowplot::get_legend(m)
+          legend_grid <- gridExtra::grid.arrange(legendm,nrow = 1)
         }
       }
 

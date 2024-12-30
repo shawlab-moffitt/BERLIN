@@ -7,6 +7,12 @@
 #' @return An R Shiny Application.
 #' @export
 #' @rawNamespace import(shiny, except=c(dataTableOutput, renderDataTable))
+#' @rawNamespace import(data.table, except=c(first, last, between, melt, dcast))
+#' @rawNamespace import(readr, except=c(col_factor))
+#' @rawNamespace import(ggpubr, except=c(rotate, get_legend))
+#' @rawNamespace import(ggplot2, except=c(last_plot))
+#' @rawNamespace import(dplyr, except=c(combine))
+#' @rawNamespace import(patchwork, except=c(align_plots))
 #' @import shinycssloaders
 #' @import shinythemes
 #' @importFrom shinyjs useShinyjs
@@ -15,12 +21,8 @@
 #' @import RColorBrewer
 #' @import umap
 #' @import cowplot
-#' @import patchwork
 #' @import ggdendro
 #' @import factoextra
-#' @import dplyr
-#' @import viridis
-#' @import readr
 #' @import ggVennDiagram
 #' @import ggtree
 #' @import stringr
@@ -30,12 +32,9 @@
 #' @import gridExtra
 #' @import tidyverse
 #' @import DT
-#' @import ggplot2
-#' @import ggpubr
 #' @import ggrepel
 #' @import scales
-#' @import data.table
-#'
+
 runUMAPapp <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000, assay = "RNA", save_data = TRUE, save_to = getwd(), project_name = "BERLIN_Project",
                        umap1_col = "UMAP_1", umap2_col = "UMAP_2", anno1_col = "seurat_clusters", anno2_col = NULL, anno3_col = NULL,
                        seed = 42, species = "human", remove_duplicates = TRUE, launch.browser = TRUE, species_detected = "human", verbose = TRUE) {

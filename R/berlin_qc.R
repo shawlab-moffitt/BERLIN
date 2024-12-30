@@ -128,7 +128,7 @@ berlin_filter <- function(seurat = NULL, species = "human", percent_mt = NULL, m
 #' @return A Seurat object.
 #' @export
 #'
-berlin_qc <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", project_name = "BERLIN_Project", species = "human", seed = 42,
+berlin_get_started <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", project_name = "BERLIN_Project", species = "human", seed = 42,
                       percent_mt = NULL, minFeatures = 500, varFeatures = 2000, verbose = TRUE, logScale = 10000, remove_duplicates = TRUE,
                       pca_npcs = 30, doublet_pN = 0.25, doublet_pK = 0.09, doublet_prop = 0.04, doublet_PCs = 1:10) {
 

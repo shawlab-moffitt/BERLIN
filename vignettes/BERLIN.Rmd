@@ -68,7 +68,7 @@ print(seruat_obj)
 </center>
 
 ```{r message=FALSE, warning=FALSE}
-obj_qc <- berlin_qc(object = seruat_obj)
+obj_qc <- berlin_get_started(object = seruat_obj)
 print(obj_qc)
 ```
 

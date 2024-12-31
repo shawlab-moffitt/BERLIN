@@ -39,6 +39,7 @@ Imports:
     rhdf5,
     BiocParallel,
     Matrix,
+    writexl,
     presto,
     fields,
     patchwork,

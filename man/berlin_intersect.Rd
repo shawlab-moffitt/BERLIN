@@ -6,17 +6,21 @@
 \usage{
 berlin_intersect(
   object = NULL,
+  markers_res = NULL,
   geneset = NULL,
   cluster_col = "seurat_clusters",
   assay = "RNA",
   min.pct = 0.25,
   adjpval_cutoff = 0.05,
   log2fc_cutoff = 1,
-  verbose = TRUE
+  verbose = TRUE,
+  return_seurat = FALSE
 )
 }
 \arguments{
 \item{object}{Seurat object. If NULL, must supply count data.}
+
+\item{markers_res}{Data.frame. Result data from Seurat's FindAllMarkers() function.}
 
 \item{geneset}{Data.frame or list. Two column data frame with first column consisting of geneset names and second column of the genes withing that geneset. One gene per row, the geneset name can repeat in the first column. If list input, this would be a named list where the names are the geneset names and each element a vector of genes as strings.}
 
@@ -31,6 +35,8 @@ berlin_intersect(
 \item{log2fc_cutoff}{Numeric. An absolute value of a log2 fold change cutoff to identify up and down regulated genes. Default is 0.}
 
 \item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
+
+\item{return_seurat}{Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.}
 }
 \value{
 Data.frame

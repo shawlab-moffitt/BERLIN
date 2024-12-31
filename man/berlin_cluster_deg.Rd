@@ -12,7 +12,8 @@ berlin_cluster_deg(
   min.pct = 0.25,
   min.diff.pct = 0,
   adjpval_cutoff = 0.05,
-  log2fc_cutoff = 1
+  log2fc_cutoff = 1,
+  return_seurat = FALSE
 )
 }
 \arguments{
@@ -26,9 +27,13 @@ berlin_cluster_deg(
 
 \item{min.pct}{Numeric. Only test genes that are detected in a minimum fraction of cells. Default is 0.25.}
 
+\item{min.diff.pct}{Numeric. Only test genes that show a minimum difference in the fraction of detection between the two groups. Set to 0 by default.}
+
 \item{adjpval_cutoff}{Numeric. An adjusted p-value value cutoff for identifying significantly expressed genes. Default is 0.05.}
 
 \item{log2fc_cutoff}{Numeric. An absolute value of a log2 fold change cutoff to identify up and down regulated genes. Default is 0.}
+
+\item{return_seurat}{Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.}
 }
 \value{
 A list of data frames containing DGE of clusters and a geneset of the markers of each cluster.

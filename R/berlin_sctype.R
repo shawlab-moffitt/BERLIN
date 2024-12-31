@@ -258,7 +258,7 @@ berlin_sctype_summarize <- function(object = NULL, scType_cell_col = NULL, clust
   meta <- object[[]]
   if (is.null(scType_cell_col)) {
     scType_cell_col <- grep("^scType_Cell_Classification$", colnames(meta), value = T)
-    if (length(celltype_col) > 0) {
+    if (length(scType_cell_col) > 0) {
       message(paste0("'scType_cell_col' argument is NULL\nWill use identified possible cell type column(s) '",paste0(scType_cell_col, collapse = ", "),"'"))
     } else {
       stop(paste0("'scType_cell_col' argument is NULL\nCannot indentify cell type column\nPlease provide"))

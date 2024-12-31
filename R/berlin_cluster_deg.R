@@ -179,11 +179,11 @@ berlin_intersect <- function(object = NULL, markers_res = NULL,geneset = NULL, c
 
   geneset_sig_upreg$cluster <- factor(geneset_sig_upreg$cluster, levels = clusters)
   geneset_sig_upreg <- geneset_sig_upreg %>%
-    group_by(cluster,term) %>%
-    summarise(genes = paste0(gene[!is.na(gene)], collapse = ", "), .groups = "drop") %>%
-    mutate(genes = replace(genes,genes=="",NA)) %>%
+    dplyr::group_by(cluster,term) %>%
+    dplyr::summarise(genes = paste0(gene[!is.na(gene)], collapse = ", "), .groups = "drop") %>%
+    dplyr::mutate(genes = replace(genes,genes=="",NA)) %>%
     unique() %>%
-    pivot_wider(
+    tidyr::pivot_wider(
       id_cols = cluster,
       names_from = term,
       values_from = genes

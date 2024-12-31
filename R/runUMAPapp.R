@@ -3,7 +3,25 @@
 
 #' Run UMAP Shiny App
 #'
+#' @param object Seurat object. If NULL, must supply count data.
+#' @param counts A matrix, data.frame, or dgCMatrix. The rows are unique features. The feature name can be the rowname or the first column. Each column is a uniquely labeled barcode/cell.
+#' @param meta A data.frame. The rows are barcode/cell names, and the column are any additionally supplied metadata. Row names in the metadata need to match the column names of the counts matrix.
+#' @param n_cells Numeric. Number of random cells to subset large datasets to display in app. Default is 2000.
+#' @param assay String. Name of the initial/default assay.
+#' @param save_data Boolean. TRUE if saving the data that is used to generat the application.
+#' @param save_to String. Directory to save the data to.
+#' @param project_name String. Desired project name. Defaults to "BERLIN_Project".
+#' @param umap1_col String. Column name from metadata that identifies the UMAP 1 coordinates. Defaults to "UMAP_1".
+#' @param umap2_col String. Column name from metadata that identifies the UMAP 2 coordinates. Defaults to "UMAP_2".
+#' @param anno1_col String. Column name from metadata of user desired annotation information for left UMAP. Defaults to "seurat_clusters".
+#' @param anno2_col String. Column name from metadata of user desired annotation information for middle UMAP. Defaults to NULL.
+#' @param anno3_col String. Column name from metadata of user desired annotation information for right UMAP. Defaults to NULL.
+#' @param seed Numeric. Random seed, default is 42. Setting to NULL will remove seed.
+#' @param species String. Denoting if the data is from "human" or "mouse".
+#' @param remove_duplicates Boolean. To remove duplicate features that may be found in the data, use TRUE, else FALSE and the function will notify you if duplicate features are found.
+#' @param verbose Boolean. To show progress, TRUE, else FALSE.
 #' @param launch.browser Boolean logic to launch application in browser. Default to TRUE.
+#'
 #' @return An R Shiny Application.
 #' @export
 #' @rawNamespace import(shiny, except=c(dataTableOutput, renderDataTable))
@@ -37,7 +55,7 @@
 
 runUMAPapp <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000, assay = "RNA", save_data = TRUE, save_to = getwd(), project_name = "BERLIN_Project",
                        umap1_col = "UMAP_1", umap2_col = "UMAP_2", anno1_col = "seurat_clusters", anno2_col = NULL, anno3_col = NULL,
-                       seed = 42, species = "human", remove_duplicates = TRUE, launch.browser = TRUE, species_detected = "human", verbose = TRUE) {
+                       seed = 42, species = "human", remove_duplicates = TRUE, launch.browser = TRUE, verbose = TRUE) {
 
   set.seed(seed)
   if (is.null(object) & is.null(counts)) stop("Please supply Seurat object or counts matrix")

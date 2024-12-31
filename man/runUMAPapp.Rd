@@ -22,12 +22,45 @@ runUMAPapp(
   species = "human",
   remove_duplicates = TRUE,
   launch.browser = TRUE,
-  species_detected = "human",
   verbose = TRUE
 )
 }
 \arguments{
+\item{object}{Seurat object. If NULL, must supply count data.}
+
+\item{counts}{A matrix, data.frame, or dgCMatrix. The rows are unique features. The feature name can be the rowname or the first column. Each column is a uniquely labeled barcode/cell.}
+
+\item{meta}{A data.frame. The rows are barcode/cell names, and the column are any additionally supplied metadata. Row names in the metadata need to match the column names of the counts matrix.}
+
+\item{n_cells}{Numeric. Number of random cells to subset large datasets to display in app. Default is 2000.}
+
+\item{assay}{String. Name of the initial/default assay.}
+
+\item{save_data}{Boolean. TRUE if saving the data that is used to generat the application.}
+
+\item{save_to}{String. Directory to save the data to.}
+
+\item{project_name}{String. Desired project name. Defaults to "BERLIN_Project".}
+
+\item{umap1_col}{String. Column name from metadata that identifies the UMAP 1 coordinates. Defaults to "UMAP_1".}
+
+\item{umap2_col}{String. Column name from metadata that identifies the UMAP 2 coordinates. Defaults to "UMAP_2".}
+
+\item{anno1_col}{String. Column name from metadata of user desired annotation information for left UMAP. Defaults to "seurat_clusters".}
+
+\item{anno2_col}{String. Column name from metadata of user desired annotation information for middle UMAP. Defaults to NULL.}
+
+\item{anno3_col}{String. Column name from metadata of user desired annotation information for right UMAP. Defaults to NULL.}
+
+\item{seed}{Numeric. Random seed, default is 42. Setting to NULL will remove seed.}
+
+\item{species}{String. Denoting if the data is from "human" or "mouse".}
+
+\item{remove_duplicates}{Boolean. To remove duplicate features that may be found in the data, use TRUE, else FALSE and the function will notify you if duplicate features are found.}
+
 \item{launch.browser}{Boolean logic to launch application in browser. Default to TRUE.}
+
+\item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
 }
 \value{
 An R Shiny Application.

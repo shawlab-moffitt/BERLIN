@@ -158,6 +158,7 @@ berlin_sctype <- function(object = NULL, scaled = TRUE, geneset = "immune", pos_
 #' @param meta data.frame. If no Seurat object available, please provide meta data with the cluster column and rownames matching score cell names.
 #' @param cluster_col String. Column name of meta data column that annotated clusters. Defaults to "seurat_clusters".
 #' @param scType_col String. Desired column name for column to store scType classification results. Defaults to "scType_classification".
+#' @param ncell.pct Numeric. Checks whether the total scType score sum is greater than a fraction of the number of cells in that cluster. Number between 0 and 1, defaults to 0.25.
 #' @param verbose Boolean. To show progress, TRUE, else FALSE.
 #'
 #' @return Seurat object with appended meta data.
@@ -166,7 +167,8 @@ berlin_sctype <- function(object = NULL, scaled = TRUE, geneset = "immune", pos_
 #'
 
 
-berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, cluster_col = "seurat_clusters", scType_col = "scType_classification", verbose = TRUE) {
+berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, cluster_col = "seurat_clusters",
+                                   scType_cluster_col = NULL, scType_cell_col = NULL, ncell.pct = 0.25, verbose = TRUE) {
 
   call.string <- deparse(expr = sys.calls()[[1]])
   func_name <- "berlin_sctype_classify"
@@ -179,6 +181,8 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
     meta <- object[[]]
   }
   if (is.null(cluster_col) & (!"seurat_clusters" %in% colnames(meta))) stop("Please provide cluster column name.")
+  scType_cluster_col <- ifelse(is.null(scType_cluster_col),paste0("scType_",cluster_col,"_Classification"),scType_cluster_col)
+  scType_cell_col <- ifelse(is.null(scType_cell_col),"scType_Cell_Classification",scType_cell_col)
 
   if (verbose) {
     message("Calculating scType cluster results.")
@@ -189,14 +193,12 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
     head(data.frame(cluster = cl, type = names(es.max.cl), scores = es.max.cl, ncells = sum(meta[,cluster_col]==cl)), 1)
   }))
 
-  if (verbose) {
-    message("Appending meta data")
-  }
 
-  colnames(cL_results) <- c(cluster_col,scType_col,"scType Score Sum","ncells")
+
+  colnames(cL_results) <- c(cluster_col,scType_cluster_col,"scType Score Sum","ncells")
   rownames(cL_results) <- NULL
 
-  cL_results[,scType_col][as.numeric(cL_results[,"scType Score Sum"]) < as.numeric(cL_results[,"ncells"])/4] = "Unknown"
+  cL_results[,scType_cluster_col][as.numeric(cL_results[,"scType Score Sum"]) < as.numeric(cL_results[,"ncells"])*ncell.pct] = "Unknown"
 
   meta <- cbind(barcode = rownames(meta),meta)
   col2move2 <- colnames(meta)[which(colnames(meta)==cluster_col)-1]
@@ -204,6 +206,19 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
   meta2 <- meta2 %>%
     relocate(any_of(c(cluster_col)), .after = !!sym(col2move2)) %>%
     as.data.frame()
+
+
+  if (verbose) {
+    message("Calculating scType cell results.")
+  }
+  score_t <- as.data.frame(t(score))
+  score_t[,scType_cell_col] <- apply(score_t,1,function(x) {
+    paste(names(x[x==max(x)]), collapse = ", ")
+  })
+  scType_cell_class <- cbind(barcode = rownames(score_t),
+                                  score_t[,scType_cell_col, drop = F])
+  meta2 <- merge(meta2,scType_cell_class, all.x = T, sort = F)
+
   rownames(meta2) <- meta2[,1]
   meta2 <- meta2[,-1]
   meta3 <- meta2[rownames(meta),]
@@ -219,3 +234,63 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
 }
 
 
+
+
+
+
+#' Summarize scType cell annotation across clusters
+#'
+#' @param object Seurat object.
+#' @param scType_cell_col String. Name of column containing predicted scType cell levele classification. If not supplied it will be predicted based on string matching.
+#' @param cluster_col String. Name of column containing cluster information. Default to "seurat_clusters".
+#' @param show_unassigned Boolean. If TRUE, unassigned or NA cell types will be included.
+#'
+#' @return A data.frame object.
+#' @export
+#'
+
+
+
+berlin_sctype_summarize <- function(object = NULL, scType_cell_col = NULL, cluster_col = "seurat_clusters", show_unassigned = TRUE) {
+
+  if (is.null(object)) stop("Please supply Seurat object")
+
+  meta <- object[[]]
+  if (is.null(scType_cell_col)) {
+    scType_cell_col <- grep("^scType_Cell_Classification$", colnames(meta), value = T)
+    if (length(celltype_col) > 0) {
+      message(paste0("'scType_cell_col' argument is NULL\nWill use identified possible cell type column(s) '",paste0(scType_cell_col, collapse = ", "),"'"))
+    } else {
+      stop(paste0("'scType_cell_col' argument is NULL\nCannot indentify cell type column\nPlease provide"))
+    }
+  }
+
+  if (is.null(cluster_col)) stop("Please supply cluster column name")
+
+  cluster_celltype_df_reshape_list <- lapply(scType_cell_col,function(c) {
+    cluster_celltype_df <- data.frame(
+      cluster = meta[,cluster_col],
+      cell_type = meta[,c]
+    )
+    # Convert NA values to a string so they are treated as a category
+    cluster_celltype_df$cell_type <- ifelse(is.na(cluster_celltype_df$cell_type), "Unassigned/NA", cluster_celltype_df$cell_type)
+    # Generate a table of cluster vs cell type counts
+    cluster_celltype_count <- table(cluster_celltype_df$cluster, cluster_celltype_df$cell_type)
+    # Convert counts to percentages
+    cluster_celltype_percentage <- prop.table(cluster_celltype_count, margin = 1) * 100
+    # Convert to df for easier viewing
+    cluster_celltype_df <- as.data.frame(cluster_celltype_percentage)
+    colnames(cluster_celltype_df) <- c('cluster', 'scType', 'percentage')
+    # Reshape for easy viewing
+    cluster_celltype_df_reshape <- reshape2::dcast(cluster_celltype_df, scType ~ cluster, value.var = "percentage")
+    colnames(cluster_celltype_df_reshape)[-1] <- paste0("Percent_scTypeCells_",cluster_col,"_",colnames(cluster_celltype_df_reshape)[-1])
+    if (!show_unassigned) {
+      cluster_celltype_df_reshape <- cluster_celltype_df_reshape[which(cluster_celltype_df_reshape[,1] != "Unassigned/NA"),]
+    }
+    cluster_celltype_df_reshape <- data.frame(cluster_celltype_df_reshape)
+  })
+  cluster_celltype_df_reshape_out <- data.table::rbindlist(cluster_celltype_df_reshape_list,fill = T)
+
+  return(cluster_celltype_df_reshape_out)
+
+}

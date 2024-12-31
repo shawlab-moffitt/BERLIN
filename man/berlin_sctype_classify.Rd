@@ -9,7 +9,9 @@ berlin_sctype_classify(
   score = NULL,
   meta = NULL,
   cluster_col = "seurat_clusters",
-  scType_col = "scType_classification",
+  scType_cluster_col = NULL,
+  scType_cell_col = NULL,
+  ncell.pct = 0.25,
   verbose = TRUE
 )
 }
@@ -22,9 +24,11 @@ berlin_sctype_classify(
 
 \item{cluster_col}{String. Column name of meta data column that annotated clusters. Defaults to "seurat_clusters".}
 
-\item{scType_col}{String. Desired column name for column to store scType classification results. Defaults to "scType_classification".}
+\item{ncell.pct}{Numeric. Checks whether the total scType score sum is greater than a fraction of the number of cells in that cluster. Number between 0 and 1, defaults to 0.25.}
 
 \item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
+
+\item{scType_col}{String. Desired column name for column to store scType classification results. Defaults to "scType_classification".}
 }
 \value{
 Seurat object with appended meta data.

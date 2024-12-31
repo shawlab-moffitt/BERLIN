@@ -207,7 +207,7 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
 
 #' Summarize scGate annotation across clusters
 #'
-#' @param object Seurat object. If NULL, must supply count data.
+#' @param object Seurat object.
 #' @param celltype_col String. Name of column containing predicted cell type names. If not supplied it will be predicted based on string matching.
 #' @param cluster_col String. Name of column containing cluster information.
 #' @param show_unassigned Boolean. If TRUE, unassigned or NA cell types will be included.

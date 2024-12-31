@@ -109,8 +109,7 @@ print(obj_qc_anno_cl)
 </center>
 
 ```{r message=FALSE, warning=FALSE}
-cluster_deg <- berlin_cluster_deg(object = obj_qc_anno_cl,
-                                  verbose = FALSE)
+cluster_deg <- berlin_cluster_deg(object = obj_qc_anno_cl)
 class(cluster_deg)
 
 # List of FindMarkers results
@@ -153,7 +152,7 @@ DT::datatable(obj_intersect_TumMyelMarks_df,
 
 ```{r message=FALSE, warning=FALSE, fig.height = 7, fig.width = 14}
 # Subset geneset to annotations of interest
-genesets_of_interest <- c("IFN-TAMs-Human-TF","Inflamed-TAMs-Human-FunctionalSig","Classical-Tumor-Infiltrating-Monocyte-in-Human-TF")
+genesets_of_interest <- unique(Tumor_MyelMarks_HS$Annotation)[c(1:4)]
 Tumor_MyelMarks_HS_sub <- Tumor_MyelMarks_HS[which(Tumor_MyelMarks_HS$Annotation %in% genesets_of_interest),]
 
 # Generate dotplot heatmap
@@ -221,8 +220,7 @@ additional columns appended to Seurat object meta data that classify the cell ty
 ```{r message=FALSE, warning=FALSE}
 obj_qc_anno_cl_sct <- berlin_sctype_classify(object = obj_qc_anno_cl,
                                              score = sctype_immune_res,
-                                             cluster_col = "seurat_clusters",
-                                             scType_col = "scType_classification")
+                                             cluster_col = "seurat_clusters")
 sctype_new_meta <- obj_qc_anno_cl_sct[[]]
 # scType enrichment score matrix
 DT::datatable(sctype_new_meta,
@@ -230,6 +228,19 @@ DT::datatable(sctype_new_meta,
                              pageLength = 5,
                              scrollX = T))
 ```
+
+## Summarize scType Cell Level Classifications
+
+```{r message=FALSE, warning=FALSE}
+scType_Cell_Summary <- berlin_sctype_summarize(object = obj_qc_anno_cl_sct)
+
+# scType celll level summary
+DT::datatable(scType_Cell_Summary,
+              options = list(lengthMenu = c(5,10, 20, 100, 1000),
+                             pageLength = 5,
+                             scrollX = T))
+```
+
 
 # scGate
 
@@ -326,7 +337,7 @@ DT::datatable(scg_multimod_meta,
 ### Summarize Single Model Results
 
 ```{r message=FALSE, warning=FALSE}
-scg_1mod_summ <- berlin_scgate_summarize(obj_qc_anno_cl_sct_scg_1mod,
+scg_1mod_summ <- berlin_scgate_summarize(object = obj_qc_anno_cl_sct_scg_1mod,
                                          celltype_col = "scGate_Myeloid_Macrohphage_Celltype",
                                          cluster_col = "seurat_clusters")
 # scGate Summary
@@ -346,5 +357,20 @@ DT::datatable(scg_mulmod_summ,
               options = list(lengthMenu = c(5,10, 20, 100, 1000),
                              pageLength = 5,
                              scrollX = T))
+
+```
+
+
+# Summarize BERLIN Annoation
+
+```{r message=FALSE, warning=FALSE}
+berlin_annotation <- berlin_anno_summary(obj_qc_anno_cl_sct_scg_1mod)
+
+# scGate Summary
+DT::datatable(berlin_annotation,
+              options = list(lengthMenu = c(5,10, 20, 100, 1000),
+                             pageLength = 5,
+                             scrollX = T),
+              rownames = FALSE)
 
 ```

@@ -12,7 +12,7 @@ berlin_scgate_summarize(
 )
 }
 \arguments{
-\item{object}{Seurat object. If NULL, must supply count data.}
+\item{object}{Seurat object.}
 
 \item{celltype_col}{String. Name of column containing predicted cell type names. If not supplied it will be predicted based on string matching.}
 

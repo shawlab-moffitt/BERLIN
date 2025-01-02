@@ -124,16 +124,17 @@ berlin_filter <- function(seurat = NULL, species = "human", percent_mt = NULL, m
 #' @param doublet_pK Numeric. The principal component neighborhood size to compute pANN, expressed as a proportion of the merged real-artificial data. Default is 0.09.
 #' @param doublet_prop Numeric. Estimated proportion of homotypic doublets. Default is 0.04.
 #' @param doublet_PCs Numeric. Number of statistically-significant principal components.
+#' @param vars.to.regress Character. A Character vector of Variables to regress out. Defualts to "nFeature_RNA".
 #'
 #' @return A Seurat object.
 #' @export
 #'
 berlin_get_started <- function(object = NULL, counts = NULL, meta = NULL, assay = "RNA", project_name = "BERLIN_Project", species = "human", seed = 42,
                       percent_mt = NULL, minFeatures = 500, varFeatures = 2000, verbose = TRUE, logScale = 10000, remove_duplicates = TRUE,
-                      pca_npcs = 30, doublet_pN = 0.25, doublet_pK = 0.09, doublet_prop = 0.04, doublet_PCs = 1:10) {
+                      pca_npcs = 30, doublet_pN = 0.25, doublet_pK = 0.09, doublet_prop = 0.04, doublet_PCs = 1:10, vars.to.regress = c("nFeature_RNA")) {
 
   call.string <- deparse(expr = sys.calls()[[1]])
-  func_name <- "berlin_qc"
+  func_name <- "berlin_get_started"
   time.stamp <- Sys.time()
   argg <- c(as.list(environment()))
   argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
@@ -211,7 +212,7 @@ berlin_get_started <- function(object = NULL, counts = NULL, meta = NULL, assay 
   if (verbose) {
     message("Scaling data")
   }
-  object <- Seurat::ScaleData(object, vars.to.regress = c("nFeature_RNA", "percent.mt"), verbose = verbose)
+  object <- Seurat::ScaleData(object, vars.to.regress = vars.to.regress, verbose = verbose)
 
 
   # Find doublets using DoubletFinder

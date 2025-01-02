@@ -11,10 +11,10 @@
 #' @importFrom utils setTxtProgressBar
 #' @importFrom utils txtProgressBar
 #'
-berlin_annotate <- function(object = NULL, verbose = TRUE) {
+berlin_SingleR <- function(object = NULL, verbose = TRUE) {
 
   call.string <- deparse(expr = sys.calls()[[1]])
-  func_name <- "berlin_annotate"
+  func_name <- "berlin_SingleR"
   time.stamp <- Sys.time()
   argg <- c(as.list(environment()))
   argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)

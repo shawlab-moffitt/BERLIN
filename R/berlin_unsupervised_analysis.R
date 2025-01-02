@@ -20,11 +20,12 @@
 #'
 
 
-berlin_cluster <- function(object = NULL, assay = "RNA", seed = 42, verbose = TRUE, resolution = c(0.5,1,1.5,2),
-                                pca_npcs = 30, tsne_dims = 1:30, umap_dims = 1:10, neighbor_dims = 1:30) {
+berlin_unsupervised_analysis <- function(object = NULL, assay = "RNA", seed = 42, verbose = TRUE, resolution = c(0.5,1,1.5,2),
+                                         run_pca = TRUE, run_umap = TRUE, run_TSNE = FALSE,
+                                         pca_npcs = 30, tsne_dims = 1:30, umap_dims = 1:10, neighbor_dims = 1:30) {
 
   call.string <- deparse(expr = sys.calls()[[1]])
-  func_name <- "berlin_cluster"
+  func_name <- "berlin_unsupervised_analysis"
   time.stamp <- Sys.time()
   argg <- c(as.list(environment()))
   argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
@@ -34,18 +35,24 @@ berlin_cluster <- function(object = NULL, assay = "RNA", seed = 42, verbose = TR
   if (!assay %in% names(object)) stop("Assay input is not found in object")
   SeuratObject::DefaultAssay(object) <- assay
 
-  object <- Seurat::RunPCA(object, npcs = pca_npcs, verbose = verbose, seed.use = seed)
-  object <- Seurat::RunTSNE(object, reduction = "pca", dims = tsne_dims, seed.use = seed)
-  object <- Seurat::RunUMAP(object, dims = umap_dims, verbose = verbose, seed.use = seed)
+  if (run_pca) {
+    object <- Seurat::RunPCA(object, npcs = pca_npcs, verbose = verbose, seed.use = seed)
+  }
+  if (run_umap) {
+    object <- Seurat::RunUMAP(object, dims = umap_dims, verbose = verbose, seed.use = seed)
+    # Add UMAP coordinates to the metadata
+    UMAP <- as.data.frame(SeuratObject::Embeddings(object = object[["umap"]]))
+    object <- Seurat::AddMetaData(object,metadata = UMAP)
+  }
+  if (run_TSNE) {
+    object <- Seurat::RunTSNE(object, reduction = "pca", dims = tsne_dims, seed.use = seed)
+    # Add tSNE coordinates to the metadata
+    tsne <- as.data.frame(SeuratObject::Embeddings(object = object[["tsne"]]))
+    object <- Seurat::AddMetaData(object,metadata = tsne)
+  }
   object <- Seurat::FindNeighbors(object, reduction = "pca", dims = neighbor_dims, verbose = verbose)
   object <- Seurat::FindClusters(object, resolution = resolution, verbose = verbose)
 
-  # Add UMAP coordinates to the metadata
-  UMAP <- as.data.frame(SeuratObject::Embeddings(object = object[["umap"]]))
-  object <- Seurat::AddMetaData(object,metadata = UMAP)
-  # Add tSNE coordinates to the metadata
-  tsne <- as.data.frame(SeuratObject::Embeddings(object = object[["tsne"]]))
-  object <- Seurat::AddMetaData(object,metadata = tsne)
 
   slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
                                                                 time.stamp = time.stamp,

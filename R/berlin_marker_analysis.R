@@ -20,12 +20,12 @@
 #'
 
 
-berlin_cluster_deg <- function(object = NULL, assay = "RNA", cluster_cols = "seurat_clusters", verbose = TRUE,
+berlin_marker_analysis <- function(object = NULL, assay = "RNA", cluster_cols = "seurat_clusters", verbose = TRUE,
                                min.pct = 0.25, min.diff.pct = 0, adjpval_cutoff = 0.05, log2fc_cutoff = 1, return_seurat = FALSE) {
 
 
   call.string <- deparse(expr = sys.calls()[[1]])
-  func_name <- "berlin_cluster_deg"
+  func_name <- "berlin_marker_analysis"
   time.stamp <- Sys.time()
   argg <- c(as.list(environment()))
   argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)

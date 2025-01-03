@@ -141,6 +141,7 @@ berlin_run_scgate <- function(object = NULL, model = NULL, model_name = NULL, as
 #' @param verbose Boolean. To show progress, TRUE, else FALSE.
 #' @param pos.thr Numeric. Minimum UCell score value for positive signatures.
 #' @param neg.thr Numeric. Maximum UCell score value for negative signatures.
+#' @param return_seurat Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.
 #'
 #' @return Seurat object.
 #' @export
@@ -211,6 +212,7 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
 #' @param celltype_col String. Name of column containing predicted cell type names. If not supplied it will be predicted based on string matching.
 #' @param cluster_col String. Name of column containing cluster information.
 #' @param show_unassigned Boolean. If TRUE, unassigned or NA cell types will be included.
+#' @param return_seurat Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.
 #'
 #' @return A data.frame object.
 #' @export
@@ -218,7 +220,13 @@ berlin_scgate <- function(object = NULL, assay = "RNA", model = NULL, model_name
 
 
 
-berlin_scgate_summarize <- function(object = NULL, celltype_col = NULL, cluster_col = "seurat_clusters", show_unassigned = TRUE) {
+berlin_scgate_summarize <- function(object = NULL, celltype_col = NULL, cluster_col = "seurat_clusters", show_unassigned = TRUE, return_seurat = FALSE) {
+
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_scgate_summarize"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
 
   if (is.null(object)) stop("Please supply Seurat object")
 
@@ -260,7 +268,16 @@ berlin_scgate_summarize <- function(object = NULL, celltype_col = NULL, cluster_
   })
   cluster_celltype_df_reshape_out <- data.table::rbindlist(cluster_celltype_df_reshape_list,fill = T)
 
-  return(cluster_celltype_df_reshape_out)
+  if (!return_seurat) {
+    return(cluster_celltype_df_reshape_out)
+  } else {
+    SeuratObject::Misc(object = object, slot = "scGate_Score_Summary") <- cluster_celltype_df_reshape_out
+    slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                  time.stamp = time.stamp,
+                                                                  call.string = call.string,
+                                                                  params = argg)
+    return(object)
+  }
 
 }
 

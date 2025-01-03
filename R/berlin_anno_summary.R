@@ -7,6 +7,7 @@
 #' @param file String. Desired file name with directory for output.
 #' @param excel Boolean. If TRUE, file will be save as excel workbook file.
 #' @param anno_cols Character Vector. Vector of column names to be subset and written out to file. List of default columns in details.
+#' @param return_seurat Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.
 #'
 #' @return data frame
 #' @export
@@ -22,11 +23,17 @@
 
 
 
-berlin_anno_summary <- function(object = NULL, meta = NULL, file = NULL, excel = TRUE,
+berlin_anno_summary <- function(object = NULL, meta = NULL, file = NULL, excel = TRUE, return_seurat = FALSE,
                                 anno_cols = c("^scType_.*\\_Classification$","scType Score Sum","ncells","scType_Cell_Classification",
                                               "^scGate_.*\\_Celltype$","seurat_clusters","RNA_snn_res.0.5","RNA_snn_res.1",
                                               "RNA_snn_res.1.5","RNA_snn_res.2","dice.main","dice.fine", "monaco.main","monaco.fine",
                                               "northern.main","northern.fine","blue.main","blue.fine")) {
+
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_anno_summary"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
 
   if (is.null(object) & is.null(meta)) stop("Please supply Seurat object or meta data")
 
@@ -60,6 +67,15 @@ berlin_anno_summary <- function(object = NULL, meta = NULL, file = NULL, excel =
     write.table(meta_anno,file, sep = '\t', row.names = F)
   }
 
-  return(meta_anno)
+  if (!return_seurat) {
+    return(meta_anno)
+  } else {
+    SeuratObject::Misc(object = object, slot = "BERLIN_Annotation_Summary") <- meta_anno
+    slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                  time.stamp = time.stamp,
+                                                                  call.string = call.string,
+                                                                  params = argg)
+    return(object)
+  }
 
 }

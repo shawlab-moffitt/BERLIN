@@ -8,7 +8,8 @@ berlin_sctype_summarize(
   object = NULL,
   scType_cell_col = NULL,
   cluster_col = "seurat_clusters",
-  show_unassigned = TRUE
+  show_unassigned = TRUE,
+  return_seurat = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ berlin_sctype_summarize(
 \item{cluster_col}{String. Name of column containing cluster information. Default to "seurat_clusters".}
 
 \item{show_unassigned}{Boolean. If TRUE, unassigned or NA cell types will be included.}
+
+\item{return_seurat}{Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.}
 }
 \value{
 A data.frame object.

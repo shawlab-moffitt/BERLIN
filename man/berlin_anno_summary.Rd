@@ -9,6 +9,7 @@ berlin_anno_summary(
   meta = NULL,
   file = NULL,
   excel = TRUE,
+  return_seurat = FALSE,
   anno_cols = c("^scType_.*\\\\_Classification$", "scType Score Sum", "ncells",
     "scType_Cell_Classification", "^scGate_.*\\\\_Celltype$", "seurat_clusters",
     "RNA_snn_res.0.5", "RNA_snn_res.1", "RNA_snn_res.1.5", "RNA_snn_res.2", "dice.main",
@@ -24,6 +25,8 @@ berlin_anno_summary(
 \item{file}{String. Desired file name with directory for output.}
 
 \item{excel}{Boolean. If TRUE, file will be save as excel workbook file.}
+
+\item{return_seurat}{Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.}
 
 \item{anno_cols}{Character Vector. Vector of column names to be subset and written out to file. List of default columns in details.}
 }

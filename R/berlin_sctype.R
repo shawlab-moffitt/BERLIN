@@ -29,13 +29,20 @@ ScType_genesets <- function() {
 #' @param pos_geneset List object. A list of positive marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.
 #' @param neg_geneset List object. A list of negative marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.
 #' @param verbose Boolean. To show progress, TRUE, else FALSE.
+#' @param return_seurat Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.
 #'
 #' @return Matrix
 #' @export
 #'
 
 
-berlin_sctype <- function(object = NULL, scaled = TRUE, geneset = "immune", pos_geneset = NULL, neg_geneset = NULL, verbose = TRUE) {
+berlin_sctype <- function(object = NULL, scaled = TRUE, geneset = "immune", pos_geneset = NULL, neg_geneset = NULL, verbose = TRUE, return_seurat = FALSE) {
+
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_sctype"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
 
   # Check input data
   if (is.null(object)) stop("Please supply Seurat object as input.")
@@ -145,7 +152,17 @@ berlin_sctype <- function(object = NULL, scaled = TRUE, geneset = "immune", pos_
 
   dimnames(es) = list(names(gs_pos), colnames(data_gs_weighted))
   es.max <- es[stats::complete.cases(es),]
-  return(es.max)
+
+  if (!return_seurat) {
+    return(es.max)
+  } else {
+    SeuratObject::Misc(object = object, slot = "scType_Scores") <- es.max
+    slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                  time.stamp = time.stamp,
+                                                                  call.string = call.string,
+                                                                  params = argg)
+    return(object)
+  }
 
 }
 
@@ -244,6 +261,7 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
 #' @param scType_cell_col String. Name of column containing predicted scType cell levele classification. If not supplied it will be predicted based on string matching.
 #' @param cluster_col String. Name of column containing cluster information. Default to "seurat_clusters".
 #' @param show_unassigned Boolean. If TRUE, unassigned or NA cell types will be included.
+#' @param return_seurat Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.
 #'
 #' @return A data.frame object.
 #' @export
@@ -251,7 +269,14 @@ berlin_sctype_classify <- function(object = NULL, score = NULL, meta = NULL, clu
 
 
 
-berlin_sctype_summarize <- function(object = NULL, scType_cell_col = NULL, cluster_col = "seurat_clusters", show_unassigned = TRUE) {
+berlin_sctype_summarize <- function(object = NULL, scType_cell_col = NULL, cluster_col = "seurat_clusters", show_unassigned = TRUE, return_seurat = FALSE) {
+
+
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_sctype_summarize"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
 
   if (is.null(object)) stop("Please supply Seurat object")
 
@@ -291,6 +316,17 @@ berlin_sctype_summarize <- function(object = NULL, scType_cell_col = NULL, clust
   })
   cluster_celltype_df_reshape_out <- data.table::rbindlist(cluster_celltype_df_reshape_list,fill = T)
 
-  return(cluster_celltype_df_reshape_out)
+
+
+  if (!return_seurat) {
+    return(cluster_celltype_df_reshape_out)
+  } else {
+    SeuratObject::Misc(object = object, slot = "scType_Score_Summary") <- cluster_celltype_df_reshape_out
+    slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                  time.stamp = time.stamp,
+                                                                  call.string = call.string,
+                                                                  params = argg)
+    return(object)
+  }
 
 }

@@ -8,7 +8,8 @@ berlin_scgate_summarize(
   object = NULL,
   celltype_col = NULL,
   cluster_col = "seurat_clusters",
-  show_unassigned = TRUE
+  show_unassigned = TRUE,
+  return_seurat = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ berlin_scgate_summarize(
 \item{cluster_col}{String. Name of column containing cluster information.}
 
 \item{show_unassigned}{Boolean. If TRUE, unassigned or NA cell types will be included.}
+
+\item{return_seurat}{Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.}
 }
 \value{
 A data.frame object.

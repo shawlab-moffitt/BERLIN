@@ -10,7 +10,8 @@ berlin_sctype(
   geneset = "immune",
   pos_geneset = NULL,
   neg_geneset = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  return_seurat = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ berlin_sctype(
 \item{neg_geneset}{List object. A list of negative marker genesets. Each element in the list should be a vector of genes and the name is the geneset name.}
 
 \item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
+
+\item{return_seurat}{Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.}
 }
 \value{
 Matrix

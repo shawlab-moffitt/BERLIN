@@ -37,6 +37,8 @@ berlin_scgate(
 \item{seed}{Numeric. Random seed, default is 42. Setting to NULL will remove seed.}
 
 \item{verbose}{Boolean. To show progress, TRUE, else FALSE.}
+
+\item{return_seurat}{Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.}
 }
 \value{
 Seurat object.

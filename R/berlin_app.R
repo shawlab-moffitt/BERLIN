@@ -53,7 +53,7 @@
 #' @import ggrepel
 #' @import scales
 
-runUMAPapp <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000, assay = "RNA", save_data = TRUE, save_to = getwd(), project_name = "BERLIN_Project",
+berlin_app <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000, assay = "RNA", save_data = TRUE, save_to = getwd(), project_name = "BERLIN_Project",
                        umap1_col = "UMAP_1", umap2_col = "UMAP_2", anno1_col = "seurat_clusters", anno2_col = NULL, anno3_col = NULL,
                        seed = 42, species = "human", remove_duplicates = TRUE, launch.browser = TRUE, verbose = TRUE) {
 

@@ -256,8 +256,8 @@ berlin_dotplot <- function(object = NULL, markers_res = NULL, geneset = NULL, cl
     #} else {
 
 
-      if (!assay %in% names(object)) stop("Assay input is not found in object")
-      SeuratObject::DefaultAssay(object) <- assay
+      #if (!assay %in% names(object)) stop("Assay input is not found in object")
+      #SeuratObject::DefaultAssay(object) <- assay
 
       if (is.null(markers_res)) {
         # Object with find markers res
@@ -310,7 +310,7 @@ berlin_dotplot <- function(object = NULL, markers_res = NULL, geneset = NULL, cl
                                    data.frame(gene = NA,
                                               Cluster_Column = cluster_col,
                                               cluster = clusters_miss,
-                                              term = unique(geneset$term)))
+                                              term = rep(unique(geneset$term),length(clusters_miss))))
       }
       geneset_sig_upreg$cluster <- factor(geneset_sig_upreg$cluster, levels = clusters)
       geneset_sig_upreg[,"Significantly Upregulated"] <- TRUE
@@ -506,6 +506,8 @@ berlin_jaccard <- function(object = NULL, markers_res = NULL, geneset = NULL, cl
     }
   })
   colnames(markers_cut_list_jac)[1] <- cluster_col
+  markers_cut_list_jac <- markers_cut_list_jac %>%
+    dplyr::relocate(any_of(c(res_col)), .after = 1)
 
 
   if (!return_seurat) {

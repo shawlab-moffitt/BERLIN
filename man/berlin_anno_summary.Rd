@@ -10,11 +10,12 @@ berlin_anno_summary(
   file = NULL,
   excel = TRUE,
   return_seurat = FALSE,
+  write_only = FALSE,
   anno_cols = c("^scType_.*\\\\_Classification$", "scType Score Sum", "ncells",
-    "scType_Cell_Classification", "^scGate_.*\\\\_Celltype$", "seurat_clusters",
-    "RNA_snn_res.0.5", "RNA_snn_res.1", "RNA_snn_res.1.5", "RNA_snn_res.2", "dice.main",
-    "dice.fine", "monaco.main", "monaco.fine", "northern.main", "northern.fine",
-    "blue.main", "blue.fine")
+    "scType_Cell_Classification", "^scGate_.*\\\\_Celltype$", "_Jaccard_Classification$",
+    "seurat_clusters", "RNA_snn_res.0.5", "RNA_snn_res.1", "RNA_snn_res.1.5",
+    "RNA_snn_res.2", "dice.main", "dice.fine", "monaco.main", "monaco.fine",
+    "northern.main", "northern.fine", "blue.main", "blue.fine")
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ berlin_anno_summary(
 
 \item{return_seurat}{Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.}
 
+\item{write_only}{Boolean. If TRUE, function will only write out table to file, not to environment.}
+
 \item{anno_cols}{Character Vector. Vector of column names to be subset and written out to file. List of default columns in details.}
 }
 \value{
@@ -37,8 +40,8 @@ data frame
 Write out BERLIN Annotation Summary
 }
 \details{
-Default annotation columns: c("scType_seurat_clusters_Classification","scType Score Sum","ncells","scType_Cell_Classification",
-"scGate_Myeloid_Macrohphage_Celltype","seurat_clusters","RNA_snn_res.0.5","RNA_snn_res.1",
+Default annotation columns: c("^scType_.\emph{\\\emph{Classification$","scType Score Sum","ncells","scType_Cell_Classification",
+"^scGate}.}\\_Celltype$","_Jaccard_Classification$","seurat_clusters","RNA_snn_res.0.5","RNA_snn_res.1",
 "RNA_snn_res.1.5","RNA_snn_res.2","dice.main","dice.fine", "monaco.main","monaco.fine",
 "northern.main","northern.fine","blue.main","blue.fine")
 }

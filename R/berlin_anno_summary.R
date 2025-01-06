@@ -8,13 +8,14 @@
 #' @param excel Boolean. If TRUE, file will be save as excel workbook file.
 #' @param anno_cols Character Vector. Vector of column names to be subset and written out to file. List of default columns in details.
 #' @param return_seurat Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.
+#' @param write_only Boolean. If TRUE, function will only write out table to file, not to environment.
 #'
 #' @return data frame
 #' @export
 #'
 #' @details
-#' Default annotation columns: c("scType_seurat_clusters_Classification","scType Score Sum","ncells","scType_Cell_Classification",
-#' "scGate_Myeloid_Macrohphage_Celltype","seurat_clusters","RNA_snn_res.0.5","RNA_snn_res.1",
+#' Default annotation columns: c("^scType_.*\\_Classification$","scType Score Sum","ncells","scType_Cell_Classification",
+#' "^scGate_.*\\_Celltype$","_Jaccard_Classification$","seurat_clusters","RNA_snn_res.0.5","RNA_snn_res.1",
 #' "RNA_snn_res.1.5","RNA_snn_res.2","dice.main","dice.fine", "monaco.main","monaco.fine",
 #' "northern.main","northern.fine","blue.main","blue.fine")
 #'
@@ -23,9 +24,9 @@
 
 
 
-berlin_anno_summary <- function(object = NULL, meta = NULL, file = NULL, excel = TRUE, return_seurat = FALSE,
+berlin_anno_summary <- function(object = NULL, meta = NULL, file = NULL, excel = TRUE, return_seurat = FALSE, write_only = FALSE,
                                 anno_cols = c("^scType_.*\\_Classification$","scType Score Sum","ncells","scType_Cell_Classification",
-                                              "^scGate_.*\\_Celltype$","seurat_clusters","RNA_snn_res.0.5","RNA_snn_res.1",
+                                              "^scGate_.*\\_Celltype$","_Jaccard_Classification$","seurat_clusters","RNA_snn_res.0.5","RNA_snn_res.1",
                                               "RNA_snn_res.1.5","RNA_snn_res.2","dice.main","dice.fine", "monaco.main","monaco.fine",
                                               "northern.main","northern.fine","blue.main","blue.fine")) {
 
@@ -48,9 +49,10 @@ berlin_anno_summary <- function(object = NULL, meta = NULL, file = NULL, excel =
   scGate_col <- grep("multiscGate",scGate_col, invert = T, value = T)
   scType_col <- grep("^scType_.*\\_Classification$", colnames(meta_anno), value = T)
   scType_col <- grep("scType_Cell_Classification",scType_col,invert = T, value = T)
+  jaccard_col <- grep("_Jaccard_Classification",colnames(meta_anno), value = T)
 
   meta_anno <- meta_anno %>%
-    relocate(any_of(c(scType_col,"scType Score Sum","ncells","scType_Cell_Classification",scGate_col,"seurat_clusters")))
+    relocate(any_of(c(scType_col,"scType Score Sum","ncells","scType_Cell_Classification",scGate_col,jaccard_col,"seurat_clusters")))
   meta_anno <- cbind(cell = rownames(meta_anno),
                      meta_anno)
 
@@ -67,15 +69,17 @@ berlin_anno_summary <- function(object = NULL, meta = NULL, file = NULL, excel =
     write.table(meta_anno,file, sep = '\t', row.names = F)
   }
 
-  if (!return_seurat) {
-    return(meta_anno)
-  } else {
-    SeuratObject::Misc(object = object, slot = "BERLIN_Annotation_Summary") <- meta_anno
-    slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
-                                                                  time.stamp = time.stamp,
-                                                                  call.string = call.string,
-                                                                  params = argg)
-    return(object)
+  if (!write_only) {
+    if (!return_seurat) {
+      return(meta_anno)
+    } else {
+      SeuratObject::Misc(object = object, slot = "BERLIN_Annotation_Summary") <- meta_anno
+      slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                    time.stamp = time.stamp,
+                                                                    call.string = call.string,
+                                                                    params = argg)
+      return(object)
+    }
   }
 
 }

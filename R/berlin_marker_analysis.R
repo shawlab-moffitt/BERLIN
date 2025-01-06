@@ -53,9 +53,9 @@ berlin_marker_analysis <- function(object = NULL, assay = "RNA", cluster_cols = 
         }
         unfiltered_all_markers <- Seurat::FindAllMarkers(object = object, min.pct = 0, min.diff.pct = 0, logfc.threshold = 0, verbose = verbose)
         rownames(unfiltered_all_markers) <- NULL
+        unfiltered_all_markers$Cluster_Column <- cluster_col
         unfiltered_all_markers <- unfiltered_all_markers %>%
-          relocate(cluster,gene)
-        unfiltered_all_markers$cluster <- paste0(cluster_col,"_",unfiltered_all_markers$cluster)
+          dplyr::relocate(Cluster_Column,cluster,gene)
 
         unfiltered_pct_markers <- unfiltered_all_markers[which(unfiltered_all_markers$pct.1 >= min.pct | unfiltered_all_markers$pct.2 >= min.pct),]
 
@@ -73,7 +73,7 @@ berlin_marker_analysis <- function(object = NULL, assay = "RNA", cluster_cols = 
       }
     }
   }
-  cluster_marker_list_out <- data.table::rbindlist(cluster_marker_list, idcol = "Cluster_Column")
+  cluster_marker_list_out <- data.table::rbindlist(cluster_marker_list)
   output_list <- list(FindMarkers_Results = cluster_marker_list_out,
                       FindMarkers_Geneset = markers_gs)
   if (!return_seurat) {
@@ -130,8 +130,8 @@ berlin_intersect <- function(object = NULL, markers_res = NULL,geneset = NULL, c
     fm_res_name <- grep("FindMarkers_Results",names(Misc(object = object)), value = T)
     if (length(fm_res_name) > 0) {
       markers_df <- as.data.frame(Misc(object = object, slot = fm_res_name))
-      if (any(grepl(paste0("^",cluster_col,"_"),markers_df[,1]))) {
-        markers_df_cl <- markers_df[which(grepl(paste0("^",cluster_col,"_"),markers_df[,1])),]
+      if (cluster_col %in% markers_df$Cluster_Column) {
+        markers_df_cl <- markers_df[markers_df$Cluster_Column == cluster_col,]
         unfiltered_all_markers <- markers_df_cl
       } else {
         stop(paste0(cluster_col," markers not found in FindMarkers_Results within Seurat object"))
@@ -144,13 +144,13 @@ berlin_intersect <- function(object = NULL, markers_res = NULL,geneset = NULL, c
       SeuratObject::Idents(object) <- cluster_col
       unfiltered_all_markers <- Seurat::FindAllMarkers(object = object, min.pct = 0, min.diff.pct = 0, logfc.threshold = 0, verbose = verbose)
       rownames(unfiltered_all_markers) <- NULL
+      unfiltered_all_markers$Cluster_Column <- cluster_col
       unfiltered_all_markers <- unfiltered_all_markers %>%
-        relocate(cluster,gene)
-      unfiltered_all_markers$cluster <- paste0(cluster_col,"_",unfiltered_all_markers$cluster)
+        dplyr::relocate(Cluster_Column,cluster,gene)
     }
   } else {
     # find markers res provided
-    if (!"cluster" %in% colnames(markers_res)) stop("'cluster' column not found in FindAllMarkers result table.")
+    if (!any(grepl("cluster",colnames(markers_res), ignore.case = T)) == FALSE)  stop("'cluster' or 'Cluster_Column' columns not found in FindAllMarkers result table.")
     unfiltered_all_markers <- markers_res
   }
 
@@ -168,11 +168,12 @@ berlin_intersect <- function(object = NULL, markers_res = NULL,geneset = NULL, c
     colnames(geneset) <- c("term","gene")
   }
 
-  geneset_sig_upreg <- merge(sig_upreg_markers,geneset)[,c(1,2,8)]
+  geneset_sig_upreg <- merge(sig_upreg_markers,geneset)[,c(1,2,3,9)]
   clusters_miss <- setdiff(clusters,unique(geneset_sig_upreg$cluster))
   if (length(clusters_miss) > 0) {
     geneset_sig_upreg <- rbind(geneset_sig_upreg,
                                data.frame(gene = NA,
+                                          Cluster_Column = cluster_col,
                                           cluster = clusters_miss,
                                           term = unique(geneset$term)))
   }
@@ -188,6 +189,7 @@ berlin_intersect <- function(object = NULL, markers_res = NULL,geneset = NULL, c
       names_from = term,
       values_from = genes
     ) %>%
+    rename_with(~cluster_col, cluster) %>%
     as.data.frame()
 
   if (!return_seurat) {
@@ -263,8 +265,8 @@ berlin_dotplot <- function(object = NULL, markers_res = NULL, geneset = NULL, cl
         fm_res_name <- grep("FindMarkers_Results",names(Misc(object = object)), value = T)
         if (length(fm_res_name) > 0) {
           markers_df <- as.data.frame(Misc(object = object, slot = fm_res_name))
-          if (any(grepl(paste0("^",cluster_col,"_"),markers_df[,1]))) {
-            markers_df_cl <- markers_df[which(grepl(paste0("^",cluster_col,"_"),markers_df[,1])),]
+          if (cluster_col %in% markers_df$Cluster_Column) {
+            markers_df_cl <- markers_df[markers_df$Cluster_Column == cluster_col,]
             unfiltered_all_markers <- markers_df_cl
           } else {
             stop(paste0(cluster_col," markers not found in FindMarkers_Results within Seurat object"))
@@ -277,16 +279,15 @@ berlin_dotplot <- function(object = NULL, markers_res = NULL, geneset = NULL, cl
           SeuratObject::Idents(object) <- cluster_col
           unfiltered_all_markers <- Seurat::FindAllMarkers(object = object, min.pct = 0, min.diff.pct = 0, logfc.threshold = 0, verbose = verbose)
           rownames(unfiltered_all_markers) <- NULL
+          unfiltered_all_markers$Cluster_Column <- cluster_col
           unfiltered_all_markers <- unfiltered_all_markers %>%
-            relocate(cluster,gene)
-          unfiltered_all_markers$cluster <- paste0(cluster_col,"_",unfiltered_all_markers$cluster)
+            dplyr::relocate(Cluster_Column,cluster,gene)
         }
       } else {
         # find markers res provided
-        if (!"cluster" %in% colnames(markers_res)) stop("'cluster' column not found in FindAllMarkers result table.")
+        if (!any(grepl("cluster",colnames(markers_res), ignore.case = T)) == FALSE)  stop("'cluster' or 'Cluster_Column' columns not found in FindAllMarkers result table.")
         unfiltered_all_markers <- markers_res
       }
-
 
       unfiltered_pct_markers <- unfiltered_all_markers[which(unfiltered_all_markers$pct.1 >= min.pct | unfiltered_all_markers$pct.2 >= min.pct),]
       sig_upreg_markers <- unfiltered_pct_markers[unfiltered_pct_markers$p_val_adj < adjpval_cutoff & unfiltered_pct_markers$avg_log2FC > log2fc_cutoff,]
@@ -302,11 +303,12 @@ berlin_dotplot <- function(object = NULL, markers_res = NULL, geneset = NULL, cl
         colnames(geneset) <- c("term","gene")
       }
 
-      geneset_sig_upreg <- merge(sig_upreg_markers,geneset)[,c(1,2,8)]
+      geneset_sig_upreg <- merge(sig_upreg_markers,geneset)[,c(1,2,3,9)]
       clusters_miss <- setdiff(clusters,unique(geneset_sig_upreg$cluster))
       if (length(clusters_miss) > 0) {
         geneset_sig_upreg <- rbind(geneset_sig_upreg,
                                    data.frame(gene = NA,
+                                              Cluster_Column = cluster_col,
                                               cluster = clusters_miss,
                                               term = unique(geneset$term)))
       }
@@ -324,7 +326,8 @@ berlin_dotplot <- function(object = NULL, markers_res = NULL, geneset = NULL, cl
       #dp <- Seurat::DotPlot(object = object, features = unique(cluster_gs_overlap[,2]))
       dp <- Seurat::DotPlot(object = object, features = unique(geneset_sig_upreg$gene))
       dp_data <- dp$data
-      dp_data$cluster <- paste0(cluster_col,"_",dp_data$id)
+      dp_data$cluster <- dp_data[,"id"]
+      #dp_data$cluster <- paste0(cluster_col,"_",dp_data$id)
       dp_data$gene <- dp_data[,"features.plot"]
 
       # Merge overall data with geneset annotation
@@ -389,4 +392,138 @@ berlin_dotplot <- function(object = NULL, markers_res = NULL, geneset = NULL, cl
 
     #}
   #}
+}
+
+
+#' Perform Jaccard equation on two vectors
+#'
+#' @param a Vector one.
+#' @param b Vector two.
+#'
+#' @return Numeric vector.
+#' @export
+#'
+
+
+jaccard <- function(a, b) {
+  a = unique(a)
+  b = unique(b)
+  intersection = length(intersect(a, b))
+  union = length(a) + length(b) - intersection
+  return (1-(intersection/union))
+}
+
+
+#' Assign Cluster to Geneset Using Jaccard Formula
+#'
+#' @param object Seurat object. If NULL, must supply count data.
+#' @param geneset Data.frame or list. Two column data frame with first column consisting of geneset names and second column of the genes withing that geneset. One gene per row, the geneset name can repeat in the first column. If list input, this would be a named list where the names are the geneset names and each element a vector of genes as strings.
+#' @param cluster_col String. Column name from meta data of primary identified clusters. Default to 'seurat_clusters'.
+#' @param res_col String. Desired column name for jaccard results. Defaults to the name of the cluster column appeneded with '_Jaccard_Classification'.
+#' @param assay String. Name of the initial/default assay. Default is RNA.
+#' @param min.pct Numeric. Only test genes that are detected in a minimum fraction of cells. Default is 0.25.
+#' @param adjpval_cutoff Numeric. An adjusted p-value value cutoff for identifying significantly expressed genes. Default is 0.05.
+#' @param log2fc_cutoff Numeric. An absolute value of a log2 fold change cutoff to identify up and down regulated genes. Default is 0.
+#' @param verbose Boolean. To show progress, TRUE, else FALSE.
+#' @param markers_res Data.frame. Result data from Seurat's FindAllMarkers() function.
+#' @param return_seurat Boolean. If TRUE, a Seurat object will be the output with the results within the stored in the Misc slot.
+#'
+#' @return a Data.frame or seurat object
+#' @export
+#'
+
+berlin_jaccard <- function(object = NULL, markers_res = NULL, geneset = NULL, cluster_col = "seurat_clusters", res_col = NULL,
+                           assay = "RNA", min.pct = 0.25, adjpval_cutoff = 0.05, log2fc_cutoff = 1.0, verbose = TRUE, return_seurat = FALSE) {
+
+  call.string <- deparse(expr = sys.calls()[[1]])
+  func_name <- "berlin_jaccard"
+  time.stamp <- Sys.time()
+  argg <- c(as.list(environment()))
+  argg <- Filter(function(x) any(is.numeric(x) | is.character(x)), argg)
+
+  if (is.null(object) & is.null(markers_res)) stop("Please supply Seurat object or FindAllMarkers result as input.")
+
+  if (is.null(res_col)) {
+    res_col <- paste0(cluster_col,"_Jaccard_Classification")
+  }
+
+  if (!assay %in% names(object)) stop("Assay input is not found in object")
+  SeuratObject::DefaultAssay(object) <- assay
+
+  if (is.null(markers_res)) {
+    # Object with find markers res
+    ## Check if find marker result is in object
+    fm_res_name <- grep("FindMarkers_Results",names(Misc(object = object)), value = T)
+    if (length(fm_res_name) > 0) {
+      markers_df <- as.data.frame(Misc(object = object, slot = fm_res_name))
+      if (cluster_col %in% markers_df$Cluster_Column) {
+        markers_df_cl <- markers_df[markers_df$Cluster_Column == cluster_col,]
+        unfiltered_all_markers <- markers_df_cl
+      } else {
+        stop(paste0(cluster_col," markers not found in FindMarkers_Results within Seurat object"))
+      }
+    } else {
+      # Object without find markers res
+      if (verbose) {
+        base::message(paste0("Finding all unfiltered markers on cluster column: ",cluster_col))
+      }
+      SeuratObject::Idents(object) <- cluster_col
+      unfiltered_all_markers <- Seurat::FindAllMarkers(object = object, min.pct = 0, min.diff.pct = 0, logfc.threshold = 0, verbose = verbose)
+      rownames(unfiltered_all_markers) <- NULL
+      unfiltered_all_markers$Cluster_Column <- cluster_col
+      unfiltered_all_markers <- unfiltered_all_markers %>%
+        dplyr::relocate(Cluster_Column,cluster,gene)
+    }
+  } else {
+    # find markers res provided
+    if (!any(grepl("cluster",colnames(markers_res), ignore.case = T)) == FALSE)  stop("'cluster' or 'Cluster_Column' columns not found in FindAllMarkers result table.")
+    unfiltered_all_markers <- markers_res
+  }
+
+  unfiltered_pct_markers <- unfiltered_all_markers[which(unfiltered_all_markers$pct.1 >= min.pct | unfiltered_all_markers$pct.2 >= min.pct),]
+  sig_upreg_markers <- unfiltered_pct_markers[unfiltered_pct_markers$p_val_adj < adjpval_cutoff & unfiltered_pct_markers$avg_log2FC > log2fc_cutoff,]
+  markers_cut_list <- split(sig_upreg_markers[,"gene"],sig_upreg_markers[,"cluster"])
+
+  if (is.data.frame(geneset)) {
+    if (ncol(geneset) == 2) {
+      geneset_list <- split(geneset[,2],geneset[,1])
+    }
+  } else {
+    geneset_list <- geneset
+  }
+
+  markers_cut_list_jac <- as.data.frame(data.table::rbindlist(lapply(markers_cut_list, function(x) {
+    as.data.frame(do.call(cbind, lapply(geneset_list, function(y) {
+      jaccard(x,y)
+    })))
+  }), idcol = "cluster"))
+
+  markers_cut_list_jac[,res_col] <- apply(markers_cut_list_jac[,-1], 1, function(x) {
+    if (all(x==1)) {
+      return(NA)
+    } else {
+      return(paste0(names(x)[which(x==min(x))], collapse = ", "))
+    }
+  })
+  colnames(markers_cut_list_jac)[1] <- cluster_col
+
+
+  if (!return_seurat) {
+    return(markers_cut_list_jac)
+  } else {
+    obj_meta <- object[[]]
+    obj_meta <- cbind(barcode = rownames(obj_meta),
+                      obj_meta)
+    obj_meta_merge <- merge(obj_meta,markers_cut_list_jac[,c(cluster_col,res_col)], all.x = T, sort = F)
+    rownames(obj_meta_merge) <- obj_meta_merge$barcode
+    obj_meta_merge <- obj_meta_merge[rownames(obj_meta),c(colnames(obj_meta),res_col)]
+    obj_meta_merge <- obj_meta_merge[,-1]
+    object <- Seurat::AddMetaData(object,metadata = obj_meta_merge)
+    SeuratObject::Misc(object = object, slot = paste0(cluster_col,"_Sig_UpReg_JaccardClass")) <- as.data.frame(markers_cut_list_jac)
+    slot(object = object, name = "commands")[[func_name]] <- list(name = func_name,
+                                                                  time.stamp = time.stamp,
+                                                                  call.string = call.string,
+                                                                  params = argg)
+    return(object)
+  }
 }

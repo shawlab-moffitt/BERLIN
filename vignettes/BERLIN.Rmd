@@ -59,7 +59,7 @@ seruat_obj <- SeuratDisk::LoadH5Seurat(h5seruat_file, assays = "RNA")
 print(seruat_obj)
 ```
 
-# Quality Control
+# Getting Started
 
 <center>
 
@@ -72,7 +72,7 @@ obj_qc <- berlin_get_started(object = seruat_obj)
 print(obj_qc)
 ```
 
-# Annotation
+# SingleR Annotation
 
 <center>
 
@@ -81,7 +81,7 @@ print(obj_qc)
 </center>
 
 ```{r message=FALSE, warning=FALSE}
-obj_qc_anno <- berlin_annotate(object = obj_qc,
+obj_qc_anno <- berlin_SingleR(object = obj_qc,
                                verbose = FALSE)
 ```
 
@@ -94,7 +94,7 @@ obj_qc_anno <- berlin_annotate(object = obj_qc,
 </center>
 
 ```{r message=FALSE, warning=FALSE}
-obj_qc_anno_cl <- berlin_cluster(object = obj_qc_anno)
+obj_qc_anno_cl <- berlin_unsupervised_analysis(object = obj_qc_anno)
 print(obj_qc_anno_cl)
 ```
 
@@ -109,23 +109,27 @@ print(obj_qc_anno_cl)
 </center>
 
 ```{r message=FALSE, warning=FALSE}
-cluster_deg <- berlin_cluster_deg(object = obj_qc_anno_cl)
-class(cluster_deg)
-
-# List of FindMarkers results
-class(cluster_deg$Cluster_Markers_DEG)
-head(cluster_deg$Cluster_Markers_DEG[["seurat_clusters_Cluster_0_Upregulated"]])
+cluster_markers <- berlin_marker_analysis(object = obj_qc_anno_cl)
+class(cluster_markers)
 
 # Geneset of significant up and downregulated FindMarkers results
-class(cluster_deg$Cluster_Markers_Geneset)
-head(cluster_deg$Cluster_Markers_Geneset)
+class(cluster_markers$FindMarkers_Geneset)
+head(cluster_markers$FindMarkers_Geneset)
+
+cluster_markers_df <- cluster_markers$FindMarkers_Results
+DT::datatable(cluster_markers_df,
+              options = list(lengthMenu = c(5,10, 20, 100, 1000),
+                             pageLength = 5,
+                             scrollX = T))
+
+
 ```
 
 ## Intersect Genesets with Cluster Markers
 
 <center>
 
-![BERLIN scType Workflow](berlin_intersect.PNG){width="100%"}
+![BERLIN intersect Workflow](berlin_intersect.PNG){width="100%"}
 
 </center>
 
@@ -146,7 +150,7 @@ DT::datatable(obj_intersect_TumMyelMarks_df,
 
 <center>
 
-![BERLIN scType Workflow](berlin_dotplot.PNG){width="100%"}
+![BERLIN Dot Plot Workflow](berlin_dotplot.PNG){width="100%"}
 
 </center>
 
@@ -159,6 +163,19 @@ Tumor_MyelMarks_HS_sub <- Tumor_MyelMarks_HS[which(Tumor_MyelMarks_HS$Annotation
 dotplot <- berlin_dotplot(object = obj_qc_anno_cl,
                           geneset = Tumor_MyelMarks_HS_sub)
 dotplot
+```
+
+## Annotating clusters with genesets using Jaccard
+
+```{r message=FALSE, warning=FALSE}
+# Subset geneset to annotations of interest
+marker_jaccard <- berlin_jaccard(object = obj_qc_anno_cl, geneset = Tumor_MyelMarks_HS)
+
+DT::datatable(marker_jaccard,
+              options = list(lengthMenu = c(5,10, 20, 100, 1000),
+                             pageLength = 5,
+                             scrollX = T),
+              rownames = F)
 ```
 
 # scType

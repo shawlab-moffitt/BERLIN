@@ -105,6 +105,18 @@ berlin_app <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000
     }
     counts <- as.data.frame(object[[assay]]$data)
     counts <- cbind(gene = rownames(counts),counts)
+
+    # detect species
+    species_detected <- detect_species(counts[,1])
+    # if different than input species, notify user
+    if (species_detected != species) {
+      if (verbose) {
+        message(paste0("Species detected does not equeal the species argument. Will be treating data as ",species_detected," data."))
+      }
+    }
+    # Check that gene symbols are not in excel date format
+    counts[,1] <- date_to_gene(counts[,1], ifelse(species_detected == "mouse",TRUE,FALSE))
+
     meta <- object[[]]
     if (nrow(meta) == 0) {
       stop("No meta data found in Seurat object")
@@ -124,9 +136,9 @@ berlin_app <- function(object = NULL, counts = NULL, meta = NULL, n_cells = 2000
       message(paste0("Subsetting ",n_cells," random cells from data for app."))
     }
     random_cells <- sample(2:ncol(counts), size = n_cells, replace = FALSE)
-    counts <- counts[,c("gene",random_cells)]
+    counts <- counts[,c(1,random_cells)]
 
-    meta <- meta[which(meta[,1] %in% random_cells),]
+    meta <- meta[which(meta[,1] %in% colnames(counts)),]
   }
 
   if (save_data) {

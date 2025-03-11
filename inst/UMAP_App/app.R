@@ -87,7 +87,7 @@ if (tolower(species_detected) == "human") {
   data(list = paste0("Geneset_Categories_HS"), package = "BERLIN")
   assign("GeneSet_CatTab",get(paste0("Geneset_Categories_HS")))
   GeneSet_Cats <- unique(GeneSet_CatTab[,1])
-} else if (islower(species_detected) == "mouse") {
+} else if (tolower(species_detected) == "mouse") {
   data(list = paste0("Geneset_list_MM"), package = "BERLIN")
   assign("geneset",get(paste0("Geneset_list_MM")))
   data(list = paste0("Geneset_Categories_MM"), package = "BERLIN")
